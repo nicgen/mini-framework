@@ -137,3 +137,20 @@ dist
 # Vite logs files
 vite.config.js.timestamp-*
 vite.config.ts.timestamp-*
+
+# Project related
+.claude
+MiniFramework.png
+# debug-todo-filters.html
+# index.html
+# test-framework.html
+.idea
+PROJECT_GUIDELINE.md
+# docs
+package.json
+test-input.html
+# CLAUDE.md
+debug-simple.html
+examples/
+src/
+test-todomvc.html

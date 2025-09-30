@@ -1,0 +1,946 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MiniFramework - Lightweight JavaScript Framework</title>
+    <style>
+        :root {
+            /* Gruvbox colors */
+            --bg-hard: #1d2021;
+            --bg-soft: #32302f;
+            --bg0: #282828;
+            --bg1: #3c3836;
+            --bg2: #504945;
+            --bg3: #665c54;
+            --bg4: #7c6f64;
+            --fg: #ebdbb2;
+            --fg0: #fbf1c7;
+            --fg1: #ebdbb2;
+            --fg2: #d5c4a1;
+            --fg3: #bdae93;
+            --fg4: #a89984;
+            --red: #cc241d;
+            --green: #98971a;
+            --yellow: #d79921;
+            --blue: #458588;
+            --purple: #b16286;
+            --aqua: #689d6a;
+            --orange: #d65d0e;
+            --gray: #928374;
+            --red-bright: #fb4934;
+            --green-bright: #b8bb26;
+            --yellow-bright: #fabd2f;
+            --blue-bright: #83a598;
+            --purple-bright: #d3869b;
+            --aqua-bright: #8ec07c;
+            --orange-bright: #fe8019;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'JetBrains Mono', 'SF Mono', Monaco, 'Cascadia Code', 'Roboto Mono', Consolas, 'Courier New', monospace;
+            line-height: 1.6;
+            color: var(--fg);
+            background: var(--bg-hard);
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+
+        header {
+            background: var(--bg0);
+            border-bottom: 2px solid var(--bg2);
+            padding: 20px 0;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            font-size: 28px;
+            font-weight: bold;
+            color: var(--yellow-bright);
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 30px;
+            list-style: none;
+        }
+
+        .nav-links a {
+            color: var(--fg2);
+            text-decoration: none;
+            font-weight: 500;
+            padding: 8px 16px;
+            border-radius: 6px;
+            transition: all 0.3s;
+            border: 1px solid transparent;
+        }
+
+        .nav-links a:hover {
+            background: var(--bg2);
+            color: var(--fg);
+            border-color: var(--bg3);
+        }
+
+        .hero {
+            text-align: center;
+            padding: 100px 0;
+            color: var(--fg);
+            background: var(--bg0);
+            border-bottom: 2px solid var(--bg2);
+        }
+
+        .hero h1 {
+            font-size: 4rem;
+            font-weight: bold;
+            margin-bottom: 20px;
+            color: var(--yellow-bright);
+            text-shadow: 0 4px 8px rgba(0, 0, 0, 0.5);
+        }
+
+        .hero p {
+            font-size: 1.3rem;
+            margin-bottom: 40px;
+            color: var(--fg2);
+            max-width: 600px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        .cta-buttons {
+            display: flex;
+            gap: 20px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            display: inline-block;
+            padding: 15px 30px;
+            border: none;
+            border-radius: 50px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            text-decoration: none;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-align: center;
+            min-width: 180px;
+        }
+
+        .btn-primary {
+            background: var(--blue-bright);
+            color: var(--bg0);
+            border: 2px solid var(--blue);
+        }
+
+        .btn-primary:hover {
+            background: var(--blue);
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
+        }
+
+        .btn-secondary {
+            background: transparent;
+            color: var(--fg);
+            border: 2px solid var(--bg3);
+        }
+
+        .btn-secondary:hover {
+            background: var(--bg2);
+            border-color: var(--bg4);
+        }
+
+        .features {
+            background: var(--bg1);
+            padding: 100px 0;
+        }
+
+        .section-title {
+            text-align: center;
+            font-size: 2.5rem;
+            margin-bottom: 60px;
+            color: var(--yellow-bright);
+        }
+
+        .features-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 40px;
+            margin-bottom: 60px;
+        }
+
+        .feature-card {
+            background: var(--bg0);
+            border: 2px solid var(--bg2);
+            padding: 40px 30px;
+            border-radius: 12px;
+            text-align: center;
+            transition: transform 0.3s, box-shadow 0.3s, border-color 0.3s;
+        }
+
+        .feature-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.4);
+            border-color: var(--bg3);
+        }
+
+        .feature-icon {
+            font-size: 3rem;
+            margin-bottom: 20px;
+            display: block;
+        }
+
+        .feature-card h3 {
+            font-size: 1.5rem;
+            margin-bottom: 15px;
+            color: var(--aqua-bright);
+        }
+
+        .feature-card p {
+            color: var(--fg2);
+        }
+
+        .code-section {
+            background: var(--bg0);
+            padding: 100px 0;
+        }
+
+        .demo-tabs {
+            display: flex;
+            background: var(--bg2);
+            border-radius: 8px;
+            padding: 4px;
+            margin-bottom: 30px;
+            gap: 4px;
+        }
+
+        .demo-tab {
+            flex: 1;
+            padding: 12px 20px;
+            background: transparent;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+            color: var(--fg3);
+            transition: all 0.2s;
+            font-family: inherit;
+        }
+
+        .demo-tab.active {
+            background: var(--bg0);
+            color: var(--blue-bright);
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+        }
+
+        .demo-tab:hover:not(.active) {
+            color: var(--fg);
+            background: var(--bg1);
+        }
+
+        .demo-content {
+            display: none;
+        }
+
+        .demo-content.active {
+            display: block;
+        }
+
+        .code-demo {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 40px;
+            align-items: start;
+        }
+
+        .code-block {
+            background: var(--bg-hard);
+            color: var(--fg);
+            padding: 30px;
+            border: 2px solid var(--bg2);
+            border-radius: 12px;
+            overflow-x: auto;
+            position: relative;
+        }
+
+        .code-block::before {
+            content: attr(data-lang);
+            position: absolute;
+            top: 10px;
+            right: 15px;
+            font-size: 0.8rem;
+            color: var(--fg4);
+            text-transform: uppercase;
+            font-weight: bold;
+        }
+
+        .demo-preview {
+            background: var(--bg1);
+            border: 2px solid var(--bg2);
+            border-radius: 12px;
+            padding: 30px;
+            min-height: 300px;
+        }
+
+        .demo-preview h3 {
+            color: var(--yellow-bright);
+            margin-bottom: 15px;
+        }
+
+        .demo-preview p {
+            color: var(--fg2);
+            margin-bottom: 20px;
+        }
+
+        .architecture {
+            background: var(--bg1);
+            padding: 100px 0;
+        }
+
+        .arch-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 30px;
+        }
+
+        .arch-component {
+            background: var(--bg0);
+            border: 2px solid var(--bg2);
+            color: var(--fg);
+            padding: 30px 25px;
+            border-radius: 12px;
+            text-align: center;
+            transition: border-color 0.3s, transform 0.3s;
+        }
+
+        .arch-component:hover {
+            border-color: var(--blue-bright);
+            transform: translateY(-3px);
+        }
+
+        .arch-component h4 {
+            font-size: 1.3rem;
+            margin-bottom: 15px;
+            color: var(--green-bright);
+        }
+
+        .arch-component p {
+            color: var(--fg2);
+        }
+
+        .footer {
+            background: var(--bg-hard);
+            color: var(--fg);
+            padding: 60px 0 30px;
+            text-align: center;
+            border-top: 2px solid var(--bg2);
+        }
+
+        .footer-links {
+            display: flex;
+            justify-content: center;
+            gap: 30px;
+            margin-bottom: 30px;
+            flex-wrap: wrap;
+        }
+
+        .footer-links a {
+            color: var(--fg3);
+            text-decoration: none;
+            padding: 8px 16px;
+            border-radius: 6px;
+            transition: color 0.3s;
+        }
+
+        .footer-links a:hover {
+            color: var(--fg);
+        }
+
+        .footer p {
+            color: var(--fg4);
+        }
+
+        @media (max-width: 768px) {
+            .hero h1 {
+                font-size: 2.5rem;
+            }
+
+            .code-demo {
+                grid-template-columns: 1fr;
+            }
+
+            .cta-buttons {
+                flex-direction: column;
+                align-items: center;
+            }
+        }
+
+        .highlight { color: var(--red-bright); font-weight: bold; }
+        .keyword { color: var(--purple-bright); font-weight: bold; }
+        .string { color: var(--green-bright); }
+        .comment { color: var(--gray); font-style: italic; }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="container">
+            <nav>
+                <div class="logo">MiniFramework</div>
+                <ul class="nav-links">
+                    <li><a href="#features">Features</a></li>
+                    <li><a href="#demo">Demo</a></li>
+                    <li><a href="#architecture">Architecture</a></li>
+                    <li><a href="examples/todomvc/">TodoMVC</a></li>
+                    <li><a href="test-framework.html">Tests</a></li>
+                </ul>
+            </nav>
+        </div>
+    </header>
+
+    <section class="hero">
+        <div class="container">
+            <h1>MiniFramework</h1>
+            <p>A lightweight, modern JavaScript framework with Virtual DOM, state management, and routing - built from scratch for educational purposes and real-world applications.</p>
+            <div class="cta-buttons">
+                <a href="examples/todomvc/" class="btn btn-primary">Live Demo</a>
+                <a href="test-framework.html" class="btn btn-secondary">Run Tests</a>
+            </div>
+        </div>
+    </section>
+
+    <section id="features" class="features">
+        <div class="container">
+            <h2 class="section-title">Core Features</h2>
+            <div class="features-grid">
+                <div class="feature-card">
+                    <span class="feature-icon">⚡</span>
+                    <h3>Virtual DOM</h3>
+                    <p>Efficient DOM manipulation with virtual DOM diffing algorithm for optimal performance and minimal reflows.</p>
+                </div>
+                <div class="feature-card">
+                    <span class="feature-icon">🎯</span>
+                    <h3>State Management</h3>
+                    <p>Redux-inspired centralized state management with middleware support, dev tools integration, and persistence.</p>
+                </div>
+                <div class="feature-card">
+                    <span class="feature-icon">🚀</span>
+                    <h3>Component System</h3>
+                    <p>Class-based components with lifecycle hooks, local state, and reusable, composable architecture.</p>
+                </div>
+                <div class="feature-card">
+                    <span class="feature-icon">🛣️</span>
+                    <h3>Client-Side Routing</h3>
+                    <p>Hash and history-based routing with nested routes, guards, and automatic URL synchronization.</p>
+                </div>
+                <div class="feature-card">
+                    <span class="feature-icon">🎭</span>
+                    <h3>Event System</h3>
+                    <p>Custom event delegation system with automatic cleanup and support for both native and custom events.</p>
+                </div>
+                <div class="feature-card">
+                    <span class="feature-icon">📦</span>
+                    <h3>Zero Dependencies</h3>
+                    <p>No external dependencies - everything built from scratch using modern ES6+ JavaScript features.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section id="demo" class="code-section">
+        <div class="container">
+            <h2 class="section-title">Interactive Demos</h2>
+
+            <!-- Demo Tabs -->
+            <div class="demo-tabs">
+                <button class="demo-tab active" data-tab="counter">🧮 Counter</button>
+                <button class="demo-tab" data-tab="events">🔔 Events</button>
+                <button class="demo-tab" data-tab="todo">📝 Mini Todo</button>
+                <button class="demo-tab" data-tab="router">🛣️ Router</button>
+            </div>
+
+            <!-- Counter Demo -->
+            <div id="counter-demo" class="demo-content active">
+                <div class="code-demo">
+                    <div class="code-block" data-lang="JavaScript">
+<pre><span class="keyword">import</span> framework <span class="keyword">from</span> <span class="string">'./src/core/framework.js'</span>;
+
+<span class="comment">// Create state store for counter</span>
+<span class="keyword">const</span> store = framework.createStore({
+    count: <span class="highlight">0</span>
+}, {
+    INCREMENT: (state) => ({ ...state, count: state.count + <span class="highlight">1</span> }),
+    DECREMENT: (state) => ({ ...state, count: state.count - <span class="highlight">1</span> })
+});
+
+<span class="comment">// Counter component</span>
+<span class="keyword">function</span> renderCounter() {
+    <span class="keyword">const</span> state = store.getState();
+
+    <span class="keyword">return</span> framework.createElement(<span class="string">'div'</span>, {
+        className: <span class="string">'counter-app'</span>
+    },
+        framework.createElement(<span class="string">'h2'</span>, {}, <span class="string">'Counter: '</span> + state.count),
+        framework.createElement(<span class="string">'button'</span>, {
+            onClick: () => {
+                store.dispatch({ type: <span class="string">'INCREMENT'</span> });
+                update();
+            }
+        }, <span class="string">'+1'</span>)
+    );
+}
+
+<span class="keyword">function</span> update() {
+    framework.render(renderCounter(), document.getElementById(<span class="string">'root'</span>));
+}</pre>
+                    </div>
+                    <div class="demo-preview">
+                        <h3>State Management Demo</h3>
+                        <p>Interactive counter with reactive state updates:</p>
+                        <div style="border: 2px dashed #ddd; padding: 20px; margin-top: 20px; border-radius: 8px; text-align: center;">
+                            <div class="counter-demo">
+                                <h4 id="counter-display" style="margin-bottom: 15px; color: #2c3e50; font-size: 24px;">Counter: 0</h4>
+                                <div style="display: flex; gap: 10px; justify-content: center;">
+                                    <button id="increment-btn" style="padding: 10px 20px; font-size: 16px; background: #667eea; color: white; border: none; border-radius: 6px; cursor: pointer;">+1</button>
+                                    <button id="decrement-btn" style="padding: 10px 20px; font-size: 16px; background: #e74c3c; color: white; border: none; border-radius: 6px; cursor: pointer;">-1</button>
+                                </div>
+                                <small style="color: #999; margin-top: 15px; display: block;">Demonstrates store creation, state management, and reactive updates</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Events Demo -->
+            <div id="events-demo" class="demo-content">
+                <div class="code-demo">
+                    <div class="code-block" data-lang="JavaScript">
+<pre><span class="keyword">import</span> framework <span class="keyword">from</span> <span class="string">'./src/core/framework.js'</span>;
+
+<span class="comment">// Create interactive elements with various events</span>
+<span class="keyword">const</span> app = framework.createElement(<span class="string">'div'</span>, {
+    className: <span class="string">'events-demo'</span>
+},
+    framework.createElement(<span class="string">'h3'</span>, {}, <span class="string">'Event Handling'</span>),
+    framework.createElement(<span class="string">'button'</span>, {
+        onClick: () => alert(<span class="string">'Hello from MiniFramework!'</span>)
+    }, <span class="string">'Click for Alert'</span>),
+
+    framework.createElement(<span class="string">'input'</span>, {
+        placeholder: <span class="string">'Type here...'</span>,
+        onInput: (e) => console.log(<span class="string">'Input:'</span>, e.target.value),
+        onKeydown: (e) => {
+            <span class="keyword">if</span> (e.key === <span class="string">'Enter'</span>) {
+                alert(<span class="string">'Enter pressed: '</span> + e.target.value);
+            }
+        }
+    }),
+
+    framework.createElement(<span class="string">'div'</span>, {
+        onMouseover: (e) => e.target.style.background = <span class="string">'#f0f0f0'</span>,
+        onMouseout: (e) => e.target.style.background = <span class="string">'white'</span>
+    }, <span class="string">'Hover over me!'</span>)
+);
+
+framework.render(app, document.getElementById(<span class="string">'root'</span>));</pre>
+                    </div>
+                    <div class="demo-preview">
+                        <h3>Event Handling Demo</h3>
+                        <p>Various event types and user interactions:</p>
+                        <div style="border: 2px dashed #ddd; padding: 20px; margin-top: 20px; border-radius: 8px;">
+                            <div id="events-container">
+                                <h4 style="margin-bottom: 15px; color: #2c3e50;">Interactive Elements</h4>
+                                <div style="display: flex; flex-direction: column; gap: 15px; align-items: start;">
+                                    <button id="alert-btn" style="padding: 10px 20px; font-size: 16px; background: #27ae60; color: white; border: none; border-radius: 6px; cursor: pointer;">Click for Alert</button>
+                                    <input id="demo-input" placeholder="Type here..." style="padding: 10px; font-size: 16px; border: 2px solid #ddd; border-radius: 6px; width: 200px;">
+                                    <div id="hover-demo" style="padding: 15px; border: 2px solid #ddd; border-radius: 6px; cursor: pointer; background: white; transition: background 0.2s;">Hover over me!</div>
+                                </div>
+                                <small style="color: #999; margin-top: 15px; display: block;">Try clicking, typing, and hovering. Check console for input events.</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Mini Todo Demo -->
+            <div id="todo-demo" class="demo-content">
+                <div class="code-demo">
+                    <div class="code-block" data-lang="JavaScript">
+<pre><span class="keyword">import</span> framework <span class="keyword">from</span> <span class="string">'./src/core/framework.js'</span>;
+
+<span class="comment">// Simple todo state management</span>
+<span class="keyword">let</span> todos = [];
+<span class="keyword">let</span> nextId = <span class="highlight">1</span>;
+
+<span class="keyword">function</span> addTodo(text) {
+    todos.push({ id: nextId++, text, completed: <span class="keyword">false</span> });
+    render();
+}
+
+<span class="keyword">function</span> toggleTodo(id) {
+    todos = todos.map(todo =>
+        todo.id === id ? { ...todo, completed: !todo.completed } : todo
+    );
+    render();
+}
+
+<span class="keyword">function</span> deleteTodo(id) {
+    todos = todos.filter(todo => todo.id !== id);
+    render();
+}
+
+<span class="keyword">function</span> renderTodos() {
+    <span class="keyword">return</span> framework.createElement(<span class="string">'div'</span>, {},
+        framework.createElement(<span class="string">'input'</span>, {
+            placeholder: <span class="string">'Add new todo...'</span>,
+            onKeydown: (e) => {
+                <span class="keyword">if</span> (e.key === <span class="string">'Enter'</span> && e.target.value.trim()) {
+                    addTodo(e.target.value.trim());
+                    e.target.value = <span class="string">''</span>;
+                }
+            }
+        }),
+        ...todos.map(todo =>
+            framework.createElement(<span class="string">'div'</span>, { key: todo.id },
+                framework.createElement(<span class="string">'span'</span>, {
+                    onClick: () => toggleTodo(todo.id),
+                    style: { textDecoration: todo.completed ? <span class="string">'line-through'</span> : <span class="string">'none'</span> }
+                }, todo.text),
+                framework.createElement(<span class="string">'button'</span>, {
+                    onClick: () => deleteTodo(todo.id)
+                }, <span class="string">'×'</span>)
+            )
+        )
+    );
+}</pre>
+                    </div>
+                    <div class="demo-preview">
+                        <h3>Dynamic List Demo</h3>
+                        <p>Add, toggle, and delete items dynamically:</p>
+                        <div style="border: 2px dashed #ddd; padding: 20px; margin-top: 20px; border-radius: 8px;">
+                            <div id="mini-todo-container">
+                                <h4 style="margin-bottom: 15px; color: #2c3e50;">Mini Todo List</h4>
+                                <input id="todo-input" placeholder="Add new todo..." style="width: 100%; padding: 10px; font-size: 16px; border: 2px solid #ddd; border-radius: 6px; margin-bottom: 15px;">
+                                <div id="todo-list"></div>
+                                <small style="color: #999; margin-top: 15px; display: block;">Type and press Enter to add. Click text to toggle. Click × to delete.</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Router Demo -->
+            <div id="router-demo" class="demo-content">
+                <div class="code-demo">
+                    <div class="code-block" data-lang="JavaScript">
+<pre><span class="keyword">import</span> framework <span class="keyword">from</span> <span class="string">'./src/core/framework.js'</span>;
+
+<span class="comment">// Set up routing</span>
+<span class="keyword">let</span> currentView = <span class="string">'home'</span>;
+
+framework.route(<span class="string">'/home'</span>, () => {
+    currentView = <span class="string">'home'</span>;
+    render();
+});
+
+framework.route(<span class="string">'/about'</span>, () => {
+    currentView = <span class="string">'about'</span>;
+    render();
+});
+
+framework.route(<span class="string">'/contact'</span>, () => {
+    currentView = <span class="string">'contact'</span>;
+    render();
+});
+
+<span class="keyword">function</span> renderView() {
+    <span class="keyword">const</span> views = {
+        home: <span class="string">'🏠 Welcome to the Home page!'</span>,
+        about: <span class="string">'ℹ️ About us: We build awesome frameworks!'</span>,
+        contact: <span class="string">'📧 Contact: hello@miniframework.dev'</span>
+    };
+
+    <span class="keyword">return</span> framework.createElement(<span class="string">'div'</span>, {},
+        framework.createElement(<span class="string">'nav'</span>, {},
+            [<span class="string">'home'</span>, <span class="string">'about'</span>, <span class="string">'contact'</span>].map(route =>
+                framework.createElement(<span class="string">'button'</span>, {
+                    onClick: () => framework.navigate(<span class="string">'/'</span> + route),
+                    className: currentView === route ? <span class="string">'active'</span> : <span class="string">''</span>
+                }, route.toUpperCase())
+            )
+        ),
+        framework.createElement(<span class="string">'main'</span>, {}, views[currentView])
+    );
+}</pre>
+                    </div>
+                    <div class="demo-preview">
+                        <h3>Client-Side Routing Demo</h3>
+                        <p>Navigate between different views without page reload:</p>
+                        <div style="border: 2px dashed #ddd; padding: 20px; margin-top: 20px; border-radius: 8px;">
+                            <div id="router-container">
+                                <h4 style="margin-bottom: 15px; color: #2c3e50;">Single Page Application</h4>
+                                <nav style="margin-bottom: 20px; display: flex; gap: 10px;">
+                                    <button class="nav-btn active" data-route="home" style="padding: 8px 16px; border: 2px solid #667eea; background: #667eea; color: white; border-radius: 6px; cursor: pointer;">HOME</button>
+                                    <button class="nav-btn" data-route="about" style="padding: 8px 16px; border: 2px solid #667eea; background: white; color: #667eea; border-radius: 6px; cursor: pointer;">ABOUT</button>
+                                    <button class="nav-btn" data-route="contact" style="padding: 8px 16px; border: 2px solid #667eea; background: white; color: #667eea; border-radius: 6px; cursor: pointer;">CONTACT</button>
+                                </nav>
+                                <div id="router-content" style="padding: 20px; background: #f8f9fa; border-radius: 6px; font-size: 18px; min-height: 60px; display: flex; align-items: center;">
+                                    🏠 Welcome to the Home page!
+                                </div>
+                                <small style="color: #999; margin-top: 15px; display: block;">Click navigation buttons to switch views without page refresh</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section id="architecture" class="architecture">
+        <div class="container">
+            <h2 class="section-title">Architecture Overview</h2>
+            <div class="arch-grid">
+                <div class="arch-component">
+                    <h4>Virtual DOM</h4>
+                    <p>Efficient DOM abstraction with reconciliation algorithm</p>
+                </div>
+                <div class="arch-component">
+                    <h4>Event System</h4>
+                    <p>Global event delegation with automatic cleanup</p>
+                </div>
+                <div class="arch-component">
+                    <h4>State Manager</h4>
+                    <p>Redux-inspired state management with middleware</p>
+                </div>
+                <div class="arch-component">
+                    <h4>Router</h4>
+                    <p>Client-side routing with history management</p>
+                </div>
+            </div>
+
+            <div style="margin-top: 60px;">
+                <h3 style="text-align: center; margin-bottom: 30px; color: #2c3e50;">Framework Structure</h3>
+                <div class="code-block" data-lang="Structure">
+<pre>mini-framework/
+├── src/core/
+│   ├── framework.js          <span class="comment"># Main API and orchestration</span>
+│   ├── virtual-dom.js        <span class="comment"># Virtual DOM implementation</span>
+│   ├── event-system.js       <span class="comment"># Custom event handling</span>
+│   ├── state-manager.js      <span class="comment"># Centralized state management</span>
+│   └── router.js            <span class="comment"># URL-based routing</span>
+├── examples/todomvc/        <span class="comment"># Complete TodoMVC implementation</span>
+├── docs/                    <span class="comment"># Framework documentation</span>
+└── tests/                   <span class="comment"># Test suite</span></pre>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-links">
+                <a href="examples/todomvc/">TodoMVC Demo</a>
+                <a href="test-framework.html">Test Suite</a>
+                <a href="test-todomvc.html">TodoMVC Tests</a>
+                <a href="docs/">Documentation</a>
+            </div>
+            <p>&copy; 2024 MiniFramework. Built for the 01-edu curriculum. Educational purposes and real-world applications.</p>
+        </div>
+    </footer>
+
+    <script>
+        // Tab switching functionality
+        function switchTab(tabName) {
+            // Hide all demo contents
+            document.querySelectorAll('.demo-content').forEach(content => {
+                content.classList.remove('active');
+            });
+
+            // Remove active class from all tabs
+            document.querySelectorAll('.demo-tab').forEach(tab => {
+                tab.classList.remove('active');
+            });
+
+            // Show selected content and activate tab
+            document.getElementById(tabName + '-demo').classList.add('active');
+            document.querySelector(`[data-tab="${tabName}"]`).classList.add('active');
+        }
+
+        // Add click handlers for tabs
+        document.querySelectorAll('.demo-tab').forEach(tab => {
+            tab.addEventListener('click', function() {
+                switchTab(this.dataset.tab);
+            });
+        });
+
+        // Counter demo functionality
+        let counter = 0;
+
+        function updateCounterDisplay() {
+            document.getElementById('counter-display').textContent = `Counter: ${counter}`;
+        }
+
+        document.getElementById('increment-btn').addEventListener('click', function() {
+            counter++;
+            updateCounterDisplay();
+            console.log('Counter incremented to:', counter);
+        });
+
+        document.getElementById('decrement-btn').addEventListener('click', function() {
+            counter--;
+            updateCounterDisplay();
+            console.log('Counter decremented to:', counter);
+        });
+
+        // Events demo functionality
+        document.getElementById('alert-btn').addEventListener('click', function() {
+            alert('Hello from MiniFramework!');
+        });
+
+        document.getElementById('demo-input').addEventListener('input', function(e) {
+            console.log('Input:', e.target.value);
+        });
+
+        document.getElementById('demo-input').addEventListener('keydown', function(e) {
+            if (e.key === 'Enter') {
+                alert('Enter pressed: ' + e.target.value);
+            }
+        });
+
+        document.getElementById('hover-demo').addEventListener('mouseover', function(e) {
+            e.target.style.background = '#f0f0f0';
+        });
+
+        document.getElementById('hover-demo').addEventListener('mouseout', function(e) {
+            e.target.style.background = 'white';
+        });
+
+        // Mini Todo demo functionality
+        let todos = [];
+        let nextId = 1;
+
+        function renderTodoList() {
+            const todoList = document.getElementById('todo-list');
+            todoList.innerHTML = '';
+
+            todos.forEach(todo => {
+                const todoItem = document.createElement('div');
+                todoItem.style.cssText = 'display: flex; justify-content: space-between; align-items: center; padding: 8px 12px; margin: 5px 0; background: #f8f9fa; border-radius: 4px;';
+
+                const todoText = document.createElement('span');
+                todoText.textContent = todo.text;
+                todoText.style.cssText = `cursor: pointer; flex: 1; ${todo.completed ? 'text-decoration: line-through; color: #999;' : ''}`;
+                todoText.addEventListener('click', () => toggleTodo(todo.id));
+
+                const deleteBtn = document.createElement('button');
+                deleteBtn.textContent = '×';
+                deleteBtn.style.cssText = 'background: #e74c3c; color: white; border: none; border-radius: 4px; padding: 4px 8px; cursor: pointer; margin-left: 10px;';
+                deleteBtn.addEventListener('click', () => deleteTodo(todo.id));
+
+                todoItem.appendChild(todoText);
+                todoItem.appendChild(deleteBtn);
+                todoList.appendChild(todoItem);
+            });
+        }
+
+        function addTodo(text) {
+            todos.push({ id: nextId++, text, completed: false });
+            renderTodoList();
+        }
+
+        function toggleTodo(id) {
+            todos = todos.map(todo =>
+                todo.id === id ? { ...todo, completed: !todo.completed } : todo
+            );
+            renderTodoList();
+        }
+
+        function deleteTodo(id) {
+            todos = todos.filter(todo => todo.id !== id);
+            renderTodoList();
+        }
+
+        document.getElementById('todo-input').addEventListener('keydown', function(e) {
+            if (e.key === 'Enter' && e.target.value.trim()) {
+                addTodo(e.target.value.trim());
+                e.target.value = '';
+            }
+        });
+
+        // Router demo functionality
+        let currentView = 'home';
+        const views = {
+            home: '🏠 Welcome to the Home page!',
+            about: 'ℹ️ About us: We build awesome frameworks!',
+            contact: '📧 Contact: hello@miniframework.dev'
+        };
+
+        function updateRouterView(view) {
+            currentView = view;
+            document.getElementById('router-content').textContent = views[view];
+
+            // Update nav buttons
+            document.querySelectorAll('.nav-btn').forEach(btn => {
+                if (btn.dataset.route === view) {
+                    btn.style.background = '#667eea';
+                    btn.style.color = 'white';
+                    btn.classList.add('active');
+                } else {
+                    btn.style.background = 'white';
+                    btn.style.color = '#667eea';
+                    btn.classList.remove('active');
+                }
+            });
+        }
+
+        document.querySelectorAll('.nav-btn').forEach(btn => {
+            btn.addEventListener('click', function() {
+                updateRouterView(this.dataset.route);
+            });
+        });
+
+        // Smooth scrolling for navigation links
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+                const target = document.querySelector(this.getAttribute('href'));
+                if (target) {
+                    target.scrollIntoView({
+                        behavior: 'smooth',
+                        block: 'start'
+                    });
+                }
+            });
+        });
+
+        // Add loading animation
+        window.addEventListener('load', function() {
+            document.body.style.opacity = '0';
+            document.body.style.transition = 'opacity 0.5s';
+            setTimeout(() => {
+                document.body.style.opacity = '1';
+            }, 100);
+        });
+    </script>
+</body>
+</html>

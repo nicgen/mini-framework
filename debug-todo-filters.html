@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Debug TodoMVC Filters</title>
+    <style>
+        body { font-family: monospace; padding: 20px; }
+        .debug-section { margin: 20px 0; padding: 15px; border: 2px solid #ddd; border-radius: 8px; }
+        .debug-section h3 { margin-top: 0; color: #333; }
+        .state-display { background: #f8f9fa; padding: 10px; border-radius: 4px; }
+        .filter-btn { margin: 5px; padding: 8px 16px; background: #667eea; color: white; border: none; border-radius: 4px; cursor: pointer; }
+        .filter-btn.active { background: #e74c3c; }
+        .todo-item { padding: 5px; margin: 3px 0; border: 1px solid #ddd; }
+        .completed { text-decoration: line-through; opacity: 0.6; }
+    </style>
+</head>
+<body>
+    <h1>TodoMVC Filter Debug Tool</h1>
+
+    <div class="debug-section">
+        <h3>Current State</h3>
+        <div id="state-display" class="state-display"></div>
+    </div>
+
+    <div class="debug-section">
+        <h3>Filter Controls</h3>
+        <button class="filter-btn active" onclick="setFilter('all')">All</button>
+        <button class="filter-btn" onclick="setFilter('active')">Active</button>
+        <button class="filter-btn" onclick="setFilter('completed')">Completed</button>
+    </div>
+
+    <div class="debug-section">
+        <h3>Filtered Results</h3>
+        <div id="filtered-results"></div>
+    </div>
+
+    <div class="debug-section">
+        <h3>Actions</h3>
+        <button onclick="addTestTodo()">Add Test Todo</button>
+        <button onclick="toggleFirstTodo()">Toggle First Todo</button>
+        <button onclick="clearStorage()">Clear Storage</button>
+        <button onclick="refreshDebug()">Refresh Debug</button>
+    </div>
+
+    <script type="module">
+        import { createTodoStore } from './examples/todomvc/store/todoStore.js';
+
+        let store;
+        let currentFilter = 'all';
+
+        // Initialize store
+        async function initStore() {
+            try {
+                store = createTodoStore();
+                refreshDebug();
+                console.log('Store initialized:', store.getState());
+            } catch (error) {
+                console.error('Failed to initialize store:', error);
+                document.getElementById('state-display').innerHTML = `<strong>Error:</strong> ${error.message}`;
+            }
+        }
+
+        function refreshDebug() {
+            if (!store) return;
+
+            const state = store.getState();
+            const filteredTodos = store.selectors.getFilteredTodos(state);
+
+            // Display current state
+            document.getElementById('state-display').innerHTML = `
+                <strong>Full State:</strong><br>
+                <pre>${JSON.stringify(state, null, 2)}</pre>
+                <strong>Current Filter:</strong> ${state.filter}<br>
+                <strong>Total Todos:</strong> ${state.todos.length}<br>
+                <strong>Active Count:</strong> ${store.selectors.getActiveCount(state)}<br>
+                <strong>Completed Count:</strong> ${store.selectors.getCompletedCount(state)}
+            `;
+
+            // Display filtered results
+            const resultsHtml = filteredTodos.length > 0
+                ? filteredTodos.map(todo => `
+                    <div class="todo-item ${todo.completed ? 'completed' : ''}">
+                        ID: ${todo.id} | Text: "${todo.text}" | Completed: ${todo.completed}
+                        <button onclick="toggleTodo(${todo.id})">Toggle</button>
+                    </div>
+                `).join('')
+                : '<em>No todos match current filter</em>';
+
+            document.getElementById('filtered-results').innerHTML = `
+                <strong>Filter: ${state.filter}</strong><br>
+                <strong>Matching Todos (${filteredTodos.length}):</strong><br>
+                ${resultsHtml}
+            `;
+        }
+
+        window.setFilter = function(filter) {
+            currentFilter = filter;
+            store.dispatch(store.actions.setFilter(filter));
+
+            // Update button states
+            document.querySelectorAll('.filter-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            event.target.classList.add('active');
+
+            refreshDebug();
+            console.log('Filter set to:', filter);
+        };
+
+        window.addTestTodo = function() {
+            const testText = 'Test Todo ' + Date.now();
+            store.dispatch(store.actions.addTodo(testText));
+            refreshDebug();
+            console.log('Added test todo:', testText);
+        };
+
+        window.toggleFirstTodo = function() {
+            const state = store.getState();
+            if (state.todos.length > 0) {
+                const firstTodo = state.todos[0];
+                store.dispatch(store.actions.toggleTodo(firstTodo.id));
+                refreshDebug();
+                console.log('Toggled first todo:', firstTodo.id);
+            }
+        };
+
+        window.toggleTodo = function(id) {
+            store.dispatch(store.actions.toggleTodo(id));
+            refreshDebug();
+            console.log('Toggled todo:', id);
+        };
+
+        window.clearStorage = function() {
+            localStorage.removeItem('todomvc-state');
+            location.reload();
+        };
+
+        window.refreshDebug = refreshDebug;
+
+        // Initialize when page loads
+        initStore();
+
+        // Auto-refresh every 2 seconds to catch external changes
+        setInterval(() => {
+            if (store) {
+                refreshDebug();
+            }
+        }, 2000);
+    </script>
+</body>
+</html>

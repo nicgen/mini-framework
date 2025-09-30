@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MiniFramework Test</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; }
+        .test { margin: 10px 0; padding: 10px; border: 1px solid #ddd; }
+        .success { background: #d4edda; border-color: #c3e6cb; }
+        .error { background: #f8d7da; border-color: #f5c6cb; }
+    </style>
+</head>
+<body>
+    <h1>MiniFramework Test Suite</h1>
+    <div id="test-results"></div>
+    <div id="test-container"></div>
+
+    <script type="module">
+        import framework from './src/core/framework.js';
+
+        const testResults = document.getElementById('test-results');
+        const testContainer = document.getElementById('test-container');
+
+        function runTest(name, testFn) {
+            try {
+                const result = testFn();
+                const div = document.createElement('div');
+                div.className = 'test success';
+                div.innerHTML = `✓ ${name}: PASSED`;
+                testResults.appendChild(div);
+                return true;
+            } catch (error) {
+                const div = document.createElement('div');
+                div.className = 'test error';
+                div.innerHTML = `✗ ${name}: FAILED - ${error.message}`;
+                testResults.appendChild(div);
+                console.error(`Test failed: ${name}`, error);
+                return false;
+            }
+        }
+
+        // Test 1: Element Creation
+        runTest('Element Creation', () => {
+            const element = framework.createElement('div', { className: 'test' }, 'Hello World');
+            if (!element || element.tag !== 'div') throw new Error('Failed to create element');
+            if (element.props.className !== 'test') throw new Error('Props not set correctly');
+            return true;
+        });
+
+        // Test 2: Rendering
+        runTest('Basic Rendering', () => {
+            const element = framework.createElement('div', {}, 'Test Content');
+            const container = document.createElement('div');
+            framework.render(element, container);
+            if (container.innerHTML === '' || !container.firstChild) throw new Error('Element not rendered');
+            return true;
+        });
+
+        // Test 3: Event System via Virtual DOM
+        runTest('Event System via Virtual DOM', () => {
+            let clicked = false;
+            const button = framework.createElement('button', {
+                onClick: () => { clicked = true; }
+            }, 'Test Button');
+
+            const container = document.createElement('div');
+            framework.render(button, container);
+
+            // Get the actual DOM element and simulate click
+            const actualButton = container.querySelector('button');
+            const event = new MouseEvent('click', { bubbles: true });
+            actualButton.dispatchEvent(event);
+
+            if (!clicked) throw new Error('Event handler not triggered');
+            return true;
+        });
+
+        // Test 4: State Management
+        runTest('State Management', () => {
+            const store = framework.createStore({ count: 0 }, {
+                INCREMENT: (state) => ({ ...state, count: state.count + 1 })
+            });
+
+            const initialCount = store.getState().count;
+            store.dispatch({ type: 'INCREMENT' });
+            const newCount = store.getState().count;
+
+            if (newCount !== initialCount + 1) throw new Error('State not updated correctly');
+            return true;
+        });
+
+        // Test 5: Routing (basic)
+        runTest('Routing Setup', () => {
+            let routeTriggered = false;
+            framework.route('/test', () => { routeTriggered = true; });
+
+            // This test just verifies no errors in route setup
+            return true;
+        });
+
+        console.log('All tests completed. Check the page for results.');
+
+        // Demo the framework
+        let clickCount = 0;
+        const updateDemo = () => {
+            const demoApp = framework.createElement('div', {
+                style: { padding: '20px', border: '2px solid #007bff', marginTop: '20px' }
+            },
+                framework.createElement('h2', {}, 'Framework Demo'),
+                framework.createElement('p', {}, 'This content was rendered using MiniFramework!'),
+                framework.createElement('p', {}, `Button clicked ${clickCount} times`),
+                framework.createElement('button', {
+                    style: { padding: '10px 20px', fontSize: '16px', cursor: 'pointer' },
+                    onClick: () => {
+                        clickCount++;
+                        updateDemo();
+                    }
+                }, 'Demo Button - Click Me!')
+            );
+            framework.render(demoApp, testContainer);
+        };
+
+        updateDemo();
+    </script>
+</body>
+</html>
