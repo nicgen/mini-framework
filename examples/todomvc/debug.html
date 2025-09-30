@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TodoMVC Debug</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .debug { background: #f0f0f0; padding: 10px; margin: 10px 0; border-radius: 5px; }
+        button { margin: 5px; padding: 10px; cursor: pointer; }
+    </style>
+</head>
+<body>
+    <h1>TodoMVC Debug Mode</h1>
+    <div class="debug">
+        <h3>Debug Controls</h3>
+        <button onclick="debugAddTodo()">Add Test Todo</button>
+        <button onclick="debugShowState()">Show State</button>
+        <button onclick="debugClearTodos()">Clear All</button>
+    </div>
+
+    <div class="debug">
+        <h3>Console Output</h3>
+        <pre id="console-output"></pre>
+    </div>
+
+    <section class="todoapp" id="todoapp">
+        <!-- App will be mounted here -->
+    </section>
+
+    <script type="module">
+        import framework from '../../src/core/framework.js';
+        import { createTodoStore } from './store/todoStore.js';
+        import { TodoApp } from './components/TodoApp.js';
+
+        // Initialize
+        const store = createTodoStore();
+        const app = new TodoApp(framework, store);
+
+        // Debug functions
+        window.debugAddTodo = () => {
+            const testTodos = ['Learn MiniFramework', 'Build TodoMVC', 'Test everything'];
+            const randomTodo = testTodos[Math.floor(Math.random() * testTodos.length)];
+            store.dispatch(store.actions.addTodo(randomTodo + ' ' + Date.now()));
+            console.log('Added todo:', randomTodo);
+        };
+
+        window.debugShowState = () => {
+            console.log('Current state:', store.getState());
+            document.getElementById('console-output').textContent = JSON.stringify(store.getState(), null, 2);
+        };
+
+        window.debugClearTodos = () => {
+            const state = store.getState();
+            state.todos.forEach(todo => {
+                store.dispatch(store.actions.deleteTodo(todo.id));
+            });
+            console.log('Cleared all todos');
+        };
+
+        // Mount app
+        const container = document.getElementById('todoapp');
+        framework.render(app.render(), container);
+
+        // Set initial filter
+        app.setFilter('all');
+
+        // Add to window for debugging
+        window.app = app;
+        window.store = store;
+        window.framework = framework;
+
+        console.log('Debug TodoMVC loaded. Use debugAddTodo(), debugShowState(), debugClearTodos()');
+    </script>
+</body>
+</html>

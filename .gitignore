@@ -151,6 +151,6 @@ package.json
 test-input.html
 # CLAUDE.md
 debug-simple.html
-examples/
-src/
-test-todomvc.html
+# examples/
+# src/
+# test-todomvc.html

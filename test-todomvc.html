@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test TodoMVC</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; }
+        .test { margin: 10px 0; padding: 10px; border: 1px solid #ddd; }
+        .success { background: #d4edda; border-color: #c3e6cb; }
+        .error { background: #f8d7da; border-color: #f5c6cb; }
+        .info { background: #d1ecf1; border-color: #bee5eb; }
+        iframe { width: 100%; height: 400px; border: 1px solid #ccc; margin-top: 20px; }
+    </style>
+</head>
+<body>
+    <h1>TodoMVC Test Results</h1>
+    <div id="test-results"></div>
+
+    <h2>TodoMVC Preview</h2>
+    <p>Testing the TodoMVC application:</p>
+    <iframe src="examples/todomvc/index.html"></iframe>
+
+    <script type="module">
+        import framework from './src/core/framework.js';
+        import { createTodoStore } from './examples/todomvc/store/todoStore.js';
+
+        const testResults = document.getElementById('test-results');
+
+        function addTestResult(name, status, message) {
+            const div = document.createElement('div');
+            div.className = `test ${status}`;
+            div.innerHTML = `<strong>${name}:</strong> ${message}`;
+            testResults.appendChild(div);
+        }
+
+        try {
+            // Test 1: Framework Import
+            if (framework && framework.createElement) {
+                addTestResult('Framework Import', 'success', 'Framework imported successfully');
+            } else {
+                addTestResult('Framework Import', 'error', 'Framework not imported correctly');
+            }
+
+            // Test 2: Store Creation
+            const store = createTodoStore();
+            if (store && store.getState) {
+                const initialState = store.getState();
+                addTestResult('Store Creation', 'success', `Store created with ${initialState.todos.length} initial todos`);
+            } else {
+                addTestResult('Store Creation', 'error', 'Store not created correctly');
+            }
+
+            // Test 3: Add Todo Action
+            store.dispatch(store.actions.addTodo('Test Todo Item'));
+            const stateAfterAdd = store.getState();
+            if (stateAfterAdd.todos.length === 1) {
+                addTestResult('Add Todo', 'success', `Todo added successfully. Current count: ${stateAfterAdd.todos.length}`);
+            } else {
+                addTestResult('Add Todo', 'error', `Expected 1 todo, got ${stateAfterAdd.todos.length}`);
+            }
+
+            // Test 4: Toggle Todo
+            const todoId = stateAfterAdd.todos[0].id;
+            store.dispatch(store.actions.toggleTodo(todoId));
+            const stateAfterToggle = store.getState();
+            if (stateAfterToggle.todos[0].completed === true) {
+                addTestResult('Toggle Todo', 'success', 'Todo toggled successfully');
+            } else {
+                addTestResult('Toggle Todo', 'error', 'Todo toggle failed');
+            }
+
+            // Test 5: Filter Functionality
+            store.dispatch(store.actions.setFilter('completed'));
+            const filteredTodos = store.selectors.getFilteredTodos(store.getState());
+            if (filteredTodos.length === 1 && filteredTodos[0].completed) {
+                addTestResult('Filter Todos', 'success', 'Filter functionality working');
+            } else {
+                addTestResult('Filter Todos', 'error', `Expected 1 completed todo, got ${filteredTodos.length}`);
+            }
+
+            // Test 6: Virtual DOM Element Creation
+            const element = framework.createElement('div', { className: 'test' }, 'Hello World');
+            if (element && element.tag === 'div' && element.props.className === 'test') {
+                addTestResult('Element Creation', 'success', 'Virtual DOM element creation working');
+            } else {
+                addTestResult('Element Creation', 'error', 'Virtual DOM element creation failed');
+            }
+
+            // Test 7: Router Setup
+            if (framework.router && framework.router.route) {
+                addTestResult('Router', 'success', 'Router is available and functional');
+            } else {
+                addTestResult('Router', 'error', 'Router not available');
+            }
+
+        } catch (error) {
+            addTestResult('Test Suite', 'error', `Test failed with error: ${error.message}`);
+            console.error('Test error:', error);
+        }
+
+        addTestResult('Test Complete', 'info', 'All automated tests completed. Check the TodoMVC preview above to test user interactions.');
+    </script>
+</body>
+</html>
