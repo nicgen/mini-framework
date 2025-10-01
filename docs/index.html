@@ -39,6 +39,19 @@
             background-clip: text;
         }
 
+        h2 {
+            font-size: 2rem;
+            margin-top: 40px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #667eea;
+        }
+
+        h3 {
+            font-size: 1.5rem;
+            margin-top: 30px;
+            color: #667eea;
+        }
+
         .doc-section {
             background: white;
             padding: 30px;
@@ -85,10 +98,24 @@
             padding: 8px 16px;
             border-radius: 6px;
             transition: background 0.3s;
+            font-weight: 500;
         }
 
         .nav a:hover {
             background: #f8f9fa;
+        }
+
+        ul {
+            margin: 15px 0;
+            padding-left: 30px;
+        }
+
+        li {
+            margin: 8px 0;
+        }
+
+        p {
+            margin: 15px 0;
         }
     </style>
 </head>
@@ -98,11 +125,10 @@
 
         <div class="nav">
             <ul>
-                <li><a href="../">Home</a></li>
-                <li><a href="../examples/todomvc/">TodoMVC Demo</a></li>
-                <li><a href="../test-framework.html">Tests</a></li>
-                <li><a href="#api">API Reference</a></li>
-                <li><a href="#examples">Examples</a></li>
+                <li><a href="../">Back to Home</a></li>
+                <li><a href="readme.html">Quick Start</a></li>
+                <li><a href="api-reference.html">API Reference</a></li>
+                <li><a href="https://github.com/nicgen/mini-framework" target="_blank" rel="noopener noreferrer">GitHub Repository</a></li>
             </ul>
         </div>
 
@@ -110,52 +136,120 @@
             <h2>Getting Started</h2>
             <p>MiniFramework is a lightweight JavaScript framework built from scratch to demonstrate modern web development concepts. It includes:</p>
             <ul style="margin: 20px 0; padding-left: 30px;">
-                <li>Virtual DOM with diffing algorithm</li>
-                <li>Component-based architecture</li>
-                <li>State management system</li>
+                <li>Virtual DOM with O(n) diffing algorithm</li>
+                <li>Key-based list reconciliation</li>
+                <li>Component-based architecture with lifecycle hooks</li>
+                <li>Redux-style state management</li>
                 <li>Client-side routing</li>
-                <li>Event handling system</li>
+                <li>Global event delegation system</li>
             </ul>
+            <p style="margin-top: 20px;">View the <a href="readme.html" style="color: #667eea;">Quick Start guide</a> for installation and usage.</p>
         </div>
 
-        <div class="doc-section" id="api">
-            <h2>API Reference</h2>
-
-            <div class="api-method">
-                <h3>framework.createElement(tag, props, ...children)</h3>
-                <p>Creates a virtual DOM element.</p>
-                <div class="code">createElement('div', { className: 'container' }, 'Hello World')</div>
-            </div>
-
-            <div class="api-method">
-                <h3>framework.render(element, container)</h3>
-                <p>Renders a virtual DOM element to a real DOM container.</p>
-                <div class="code">framework.render(element, document.getElementById('root'))</div>
-            </div>
-
-            <div class="api-method">
-                <h3>framework.createStore(initialState, reducers)</h3>
-                <p>Creates a state management store with reducers.</p>
-                <div class="code">const store = framework.createStore({ count: 0 }, { INCREMENT: (state) => ({ ...state, count: state.count + 1 }) })</div>
-            </div>
-
-            <div class="api-method">
-                <h3>framework.route(path, handler)</h3>
-                <p>Sets up a route with a handler function.</p>
-                <div class="code">framework.route('/', () => console.log('Home page'))</div>
+        <div class="doc-section">
+            <h2>Documentation</h2>
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px; margin-top: 20px;">
+                <div style="padding: 20px; background: #f8f9fa; border-radius: 8px; border-left: 4px solid #667eea;">
+                    <h3 style="margin-top: 0;">📘 <a href="readme.html" style="color: #667eea; text-decoration: none;">Quick Start</a></h3>
+                    <p style="margin: 10px 0; font-size: 0.95rem;">Project overview, quick start guide, and basic usage examples.</p>
+                </div>
+                <div style="padding: 20px; background: #f8f9fa; border-radius: 8px; border-left: 4px solid #764ba2;">
+                    <h3 style="margin-top: 0;">📚 <a href="api-reference.html" style="color: #764ba2; text-decoration: none;">API Reference</a></h3>
+                    <p style="margin: 10px 0; font-size: 0.95rem;">Complete API documentation with detailed examples and patterns.</p>
+                </div>
             </div>
         </div>
 
-        <div class="doc-section" id="examples">
-            <h2>Examples</h2>
+        <div class="doc-section">
+            <h2>Quick API Reference</h2>
+
+            <div class="api-method">
+                <h3>h(type, props, children)</h3>
+                <p>Creates a virtual node (VNode) representing a DOM element.</p>
+                <pre class="code">const vnode = h('div', { class: 'container' }, [
+  h('h1', {}, 'Hello World'),
+  h('button', { onclick: handleClick }, 'Click Me')
+]);</pre>
+            </div>
+
+            <div class="api-method">
+                <h3>render(vnode, container)</h3>
+                <p>Renders a virtual node tree to a real DOM container with automatic diffing.</p>
+                <pre class="code">render(vnode, document.getElementById('app'));</pre>
+            </div>
+
+            <div class="api-method">
+                <h3>createStore(reducer, initialState, enhancer)</h3>
+                <p>Creates a Redux-style state store with middleware support.</p>
+                <pre class="code">const store = createStore(reducer, { todos: [] });
+store.subscribe(() => render(App(store.getState()), root));
+store.dispatch({ type: 'ADD_TODO', payload: todo });</pre>
+            </div>
+
+            <div class="api-method">
+                <h3>Router(routes)</h3>
+                <p>Sets up hash-based routing with parameter extraction.</p>
+                <pre class="code">const router = new Router({
+  '/': homeHandler,
+  '/todos/:filter': filterHandler
+});
+router.navigate('/todos/active');</pre>
+            </div>
+
+            <p style="margin-top: 30px; text-align: center;">
+                <a href="api-reference.html" style="color: #667eea; font-weight: 600; font-size: 1.1rem;">View Complete API Reference →</a>
+            </p>
+        </div>
+
+        <div class="doc-section">
+            <h2>Live Examples</h2>
             <p>Check out our complete TodoMVC implementation to see MiniFramework in action:</p>
-            <div class="code">
-// Complete TodoMVC app structure
+            <pre class="code">
+# TodoMVC Project Structure
 examples/todomvc/
-├── app.js              // Main application entry
-├── components/         // Reusable UI components
-├── store/             // State management
-└── styles.css         // Application styles
+├── app.js              # Main application entry point
+├── components/         # Reusable UI components
+│   ├── TodoItem.js     # Individual todo component
+│   ├── TodoList.js     # List of todos
+│   ├── Header.js       # App header with input
+│   └── Footer.js       # Footer with filters
+└── store/             # State management
+    ├── actions.js      # Action creators
+    ├── reducer.js      # Root reducer
+    └── middleware.js   # Store middleware
+            </pre>
+            <p style="margin-top: 20px; text-align: center;">
+                <a href="../examples/todomvc/" style="display: inline-block; background: linear-gradient(45deg, #667eea, #764ba2); color: white; padding: 12px 30px; border-radius: 8px; text-decoration: none; font-weight: 600;">View TodoMVC Demo →</a>
+            </p>
+        </div>
+
+        <div class="doc-section">
+            <h2>Features</h2>
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px; margin-top: 20px;">
+                <div>
+                    <h3 style="color: #667eea;">🚀 Virtual DOM</h3>
+                    <p>O(n) diffing algorithm with key-based reconciliation for optimal list updates.</p>
+                </div>
+                <div>
+                    <h3 style="color: #764ba2;">🎯 Event Delegation</h3>
+                    <p>Pure global event delegation system with single listener per event type.</p>
+                </div>
+                <div>
+                    <h3 style="color: #667eea;">📦 State Management</h3>
+                    <p>Redux-style centralized state with middleware support and time-travel debugging.</p>
+                </div>
+                <div>
+                    <h3 style="color: #764ba2;">🔄 Routing</h3>
+                    <p>Hash-based client-side routing with URL parameter extraction.</p>
+                </div>
+                <div>
+                    <h3 style="color: #667eea;">⚡ Performance</h3>
+                    <p>Efficient DOM manipulation with minimal operations and memory footprint.</p>
+                </div>
+                <div>
+                    <h3 style="color: #764ba2;">🎓 Educational</h3>
+                    <p>Clear codebase demonstrating core concepts of modern web frameworks.</p>
+                </div>
             </div>
         </div>
     </div>

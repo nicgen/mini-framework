@@ -2,6 +2,8 @@
 
 A lightweight JavaScript framework with DOM abstraction, routing, state management, and event handling.
 
+**GitHub Repository:** [https://github.com/nicgen/mini-framework](https://github.com/nicgen/mini-framework)
+
 ## Quick Start
 
 1. **Start the development server:**
@@ -37,4 +39,8 @@ mini-framework/
 
 ## Documentation
 
-See `docs/README.md` for comprehensive documentation, or visit the [project guideline](PROJECT_GUIDELINE.md) for implementation details.
+- **Online Documentation:** [http://localhost:8080/docs/](http://localhost:8080/docs/)
+- **Quick Start Guide:** [docs/readme.html](docs/readme.html)
+- **API Reference:** [docs/api-reference.html](docs/api-reference.html)
+
+For comprehensive documentation, visit the docs directory or start the development server and navigate to `/docs/`.

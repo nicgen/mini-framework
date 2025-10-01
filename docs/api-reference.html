@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>API Reference - MiniFramework Documentation</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background: #f8f9fa;
+        }
+
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 40px 20px;
+        }
+
+        h1, h2, h3 {
+            color: #2c3e50;
+            margin-bottom: 20px;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            text-align: center;
+            margin-bottom: 40px;
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        h2 {
+            font-size: 2rem;
+            margin-top: 40px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #667eea;
+        }
+
+        h3 {
+            font-size: 1.5rem;
+            margin-top: 30px;
+            color: #667eea;
+        }
+
+        .doc-section {
+            background: white;
+            padding: 30px;
+            border-radius: 12px;
+            margin-bottom: 30px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .api-method {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 8px;
+            margin: 20px 0;
+            border-left: 4px solid #667eea;
+        }
+
+        .code {
+            background: #2c3e50;
+            color: #ecf0f1;
+            padding: 20px;
+            border-radius: 8px;
+            overflow-x: auto;
+            margin: 15px 0;
+            font-family: 'Courier New', monospace;
+            font-size: 0.95rem;
+        }
+
+        .nav {
+            background: white;
+            padding: 20px;
+            border-radius: 12px;
+            margin-bottom: 30px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .nav ul {
+            list-style: none;
+            display: flex;
+            gap: 20px;
+            flex-wrap: wrap;
+        }
+
+        .nav a {
+            color: #667eea;
+            text-decoration: none;
+            padding: 8px 16px;
+            border-radius: 6px;
+            transition: background 0.3s;
+            font-weight: 500;
+        }
+
+        .nav a:hover {
+            background: #f8f9fa;
+        }
+
+        ul, ol {
+            margin: 15px 0;
+            padding-left: 30px;
+        }
+
+        li {
+            margin: 8px 0;
+        }
+
+        p {
+            margin: 15px 0;
+        }
+
+        pre {
+            margin: 0;
+        }
+
+        code {
+            font-family: 'Courier New', monospace;
+            background: #f0f0f0;
+            padding: 2px 6px;
+            border-radius: 3px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="nav">
+            <ul>
+                <li><a href="../">Back to Home</a></li>
+                <li><a href="readme.html">Quick Start</a></li>
+                <li><a href="api-reference.html">API Reference</a></li>
+                <li><a href="https://github.com/nicgen/mini-framework" target="_blank" rel="noopener noreferrer">GitHub Repository</a></li>
+            </ul>
+        </div>
+
+        <h1>API Reference</h1>
+
+        <div class="doc-section">
+            <h2>Core API</h2>
+
+            <div class="api-method">
+                <h3>h(type, props, children)</h3>
+                <p>Creates a virtual node (VNode) representing a DOM element.</p>
+                <p><strong>Parameters:</strong></p>
+                <ul>
+                    <li><code>type</code> (string) - HTML element tag name</li>
+                    <li><code>props</code> (object) - Element properties and attributes</li>
+                    <li><code>children</code> (array|string) - Child vnodes or text content</li>
+                </ul>
+                <p><strong>Returns:</strong> VNode object</p>
+                <pre class="code">const vnode = h('div', { class: 'container' }, [
+  h('h1', {}, 'Hello World'),
+  h('button', { onclick: handleClick }, 'Click Me')
+]);</pre>
+            </div>
+
+            <div class="api-method">
+                <h3>render(vnode, container)</h3>
+                <p>Renders a virtual node tree to a real DOM container with automatic diffing.</p>
+                <p><strong>Parameters:</strong></p>
+                <ul>
+                    <li><code>vnode</code> (VNode) - Virtual node to render</li>
+                    <li><code>container</code> (HTMLElement) - DOM element to render into</li>
+                </ul>
+                <pre class="code">render(vnode, document.getElementById('app'));</pre>
+            </div>
+
+            <h2>State Management</h2>
+
+            <div class="api-method">
+                <h3>createStore(reducer, initialState, enhancer)</h3>
+                <p>Creates a Redux-style state store with middleware support.</p>
+                <p><strong>Parameters:</strong></p>
+                <ul>
+                    <li><code>reducer</code> (function) - Reducer function</li>
+                    <li><code>initialState</code> (object) - Initial state object</li>
+                    <li><code>enhancer</code> (function) - Optional store enhancer</li>
+                </ul>
+                <p><strong>Returns:</strong> Store object with methods:</p>
+                <ul>
+                    <li><code>getState()</code> - Get current state</li>
+                    <li><code>dispatch(action)</code> - Dispatch an action</li>
+                    <li><code>subscribe(listener)</code> - Subscribe to state changes</li>
+                </ul>
+                <pre class="code">const store = createStore(reducer, { todos: [] });
+store.subscribe(() => render(App(store.getState()), root));
+store.dispatch({ type: 'ADD_TODO', payload: todo });</pre>
+            </div>
+
+            <h2>Routing</h2>
+
+            <div class="api-method">
+                <h3>Router(routes)</h3>
+                <p>Sets up hash-based routing with parameter extraction.</p>
+                <p><strong>Parameters:</strong></p>
+                <ul>
+                    <li><code>routes</code> (object) - Route patterns mapped to handler functions</li>
+                </ul>
+                <p><strong>Methods:</strong></p>
+                <ul>
+                    <li><code>navigate(path)</code> - Navigate to a specific route</li>
+                    <li><code>getCurrentRoute()</code> - Get current route information</li>
+                </ul>
+                <pre class="code">const router = new Router({
+  '/': homeHandler,
+  '/todos/:filter': filterHandler
+});
+router.navigate('/todos/active');</pre>
+            </div>
+
+            <h2>Event System</h2>
+
+            <div class="api-method">
+                <h3>Event Delegation</h3>
+                <p>The framework uses pure global event delegation. All events are handled through event properties on vnodes.</p>
+                <p><strong>Supported Events:</strong></p>
+                <ul>
+                    <li><code>onclick</code> - Click events</li>
+                    <li><code>onchange</code> - Change events</li>
+                    <li><code>oninput</code> - Input events</li>
+                    <li><code>onkeydown</code> - Keyboard events</li>
+                    <li><code>ondblclick</code> - Double-click events</li>
+                    <li>And more...</li>
+                </ul>
+                <pre class="code">h('button', {
+  onclick: (e) => console.log('Clicked!'),
+  onmouseenter: (e) => console.log('Mouse entered')
+}, 'Click Me')</pre>
+            </div>
+
+            <h2>Additional Resources</h2>
+            <p>For implementation details and usage examples:</p>
+            <ul>
+                <li><a href="readme.html" style="color: #667eea;">Quick Start Guide</a></li>
+                <li><a href="../examples/todomvc/" style="color: #667eea;">TodoMVC Example</a></li>
+                <li><a href="../test-framework.html" style="color: #667eea;">Framework Tests</a></li>
+            </ul>
+        </div>
+    </div>
+</body>
+</html>

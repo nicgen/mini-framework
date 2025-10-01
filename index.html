@@ -83,6 +83,7 @@
             display: flex;
             gap: 30px;
             list-style: none;
+            align-items: center;
         }
 
         .nav-links a {
@@ -99,6 +100,25 @@
             background: var(--bg2);
             color: var(--fg);
             border-color: var(--bg3);
+        }
+
+        .github-link {
+            color: var(--fg2);
+            text-decoration: none;
+            padding: 8px 16px;
+            border-radius: 6px;
+            transition: all 0.3s;
+            border: 2px solid var(--bg3);
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            font-weight: 600;
+        }
+
+        .github-link:hover {
+            background: var(--bg2);
+            color: var(--fg);
+            border-color: var(--purple-bright);
         }
 
         .hero {
@@ -413,6 +433,7 @@
                     <li><a href="#architecture">Architecture</a></li>
                     <li><a href="examples/todomvc/">TodoMVC</a></li>
                     <li><a href="test-framework.html">Tests</a></li>
+                    <li><a href="https://github.com/nicgen/mini-framework" class="github-link" target="_blank" rel="noopener noreferrer">GitHub Repository</a></li>
                 </ul>
             </nav>
         </div>
