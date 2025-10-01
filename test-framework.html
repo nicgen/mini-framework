@@ -65,12 +65,16 @@
             }, 'Test Button');
 
             const container = document.createElement('div');
+            document.body.appendChild(container); // Attach container to document for event bubbling
             framework.render(button, container);
 
             // Get the actual DOM element and simulate click
             const actualButton = container.querySelector('button');
             const event = new MouseEvent('click', { bubbles: true });
             actualButton.dispatchEvent(event);
+
+            // Cleanup
+            document.body.removeChild(container);
 
             if (!clicked) throw new Error('Event handler not triggered');
             return true;

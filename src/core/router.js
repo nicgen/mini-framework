@@ -15,10 +15,13 @@ export class Router {
         this.mode = 'hash'; // 'hash' or 'history'
 
         this.isInitialized = false;
+        this.isNavigating = false; // Guard against concurrent navigation
     }
 
     init() {
-        if (this.isInitialized) return;
+        if (this.isInitialized) {
+            return;
+        }
 
         this.setupEventListeners();
         this.handleInitialRoute();
@@ -26,22 +29,25 @@ export class Router {
     }
 
     setupEventListeners() {
-        // Handle browser back/forward buttons
-        window.addEventListener('popstate', (event) => {
-            this.handleRouteChange(event.state);
-        });
-
-        // Handle hash changes
+        // Handle hash changes (hash mode only)
         if (this.mode === 'hash') {
-            window.addEventListener('hashchange', () => {
+            this.hashchangeHandler = () => {
                 this.handleRouteChange();
-            });
+            };
+            window.addEventListener('hashchange', this.hashchangeHandler);
+        } else {
+            // Handle browser back/forward buttons (history mode only)
+            this.popstateHandler = (event) => {
+                this.handleRouteChange(event.state);
+            };
+            window.addEventListener('popstate', this.popstateHandler);
         }
 
         // Handle link clicks for SPA navigation
-        document.addEventListener('click', (event) => {
+        this.clickHandler = (event) => {
             this.handleLinkClick(event);
-        });
+        };
+        document.addEventListener('click', this.clickHandler);
     }
 
     handleLinkClick(event) {
@@ -51,10 +57,15 @@ export class Router {
         const href = link.getAttribute('href');
 
         // Only handle internal links
-        if (href.startsWith('http') || href.startsWith('//')) return;
+        if (href.startsWith('http') || href.startsWith('//')) {
+            return;
+        }
 
-        // Skip if it's a hash link to the same page
-        if (href.startsWith('#') && this.mode !== 'hash') return;
+        // In hash mode, handle all hash links
+        // In history mode, skip hash links (they're for same-page anchors)
+        if (this.mode === 'history' && href.startsWith('#')) {
+            return;
+        }
 
         event.preventDefault();
         this.navigate(href);
@@ -98,9 +109,17 @@ export class Router {
     navigate(path, options = {}) {
         const { replace = false, state = null } = options;
 
-        if (path === this.currentPath) return;
+        // Strip hash prefix if present (in hash mode, paths should not include the #)
+        let normalizedPath = path;
+        if (this.mode === 'hash' && path.startsWith('#')) {
+            normalizedPath = path.slice(1);
+        }
 
-        const fullPath = this.resolvePath(path);
+        if (normalizedPath === this.currentPath) {
+            return;
+        }
+
+        const fullPath = this.resolvePath(normalizedPath);
 
         if (this.mode === 'hash') {
             if (replace) {
@@ -108,15 +127,16 @@ export class Router {
             } else {
                 window.location.hash = fullPath;
             }
+            // Don't call handleRouteChange here - hashchange event will trigger it
         } else {
             if (replace) {
                 window.history.replaceState(state, '', fullPath);
             } else {
                 window.history.pushState(state, '', fullPath);
             }
+            // For history mode, we need to manually call handleRouteChange
+            this.handleRouteChange(state, fullPath);
         }
-
-        this.handleRouteChange(state, fullPath);
     }
 
     back() {
@@ -141,9 +161,18 @@ export class Router {
 
     async handleRouteChange(state = null, path = null) {
         const targetPath = path || this.getCurrentPath();
+
+        // Prevent concurrent route changes
+        if (this.isNavigating) {
+            return;
+        }
+
+        this.isNavigating = true;
+
         const matchedRoute = this.matchRoute(targetPath);
 
         if (!matchedRoute) {
+            this.isNavigating = false;
             this.handleNotFound(targetPath);
             return;
         }
@@ -164,13 +193,19 @@ export class Router {
             // Run before hooks
             for (const hook of this.beforeHooks) {
                 const result = await this.runHook(hook, routeContext);
-                if (result === false) return; // Navigation cancelled
+                if (result === false) {
+                    this.isNavigating = false;
+                    return; // Navigation cancelled
+                }
             }
 
             // Run route-specific beforeEnter guard
             if (route.beforeEnter) {
                 const result = await this.runHook(route.beforeEnter, routeContext);
-                if (result === false) return;
+                if (result === false) {
+                    this.isNavigating = false;
+                    return;
+                }
             }
 
             // Execute route handler
@@ -185,7 +220,10 @@ export class Router {
                 await this.runHook(hook, routeContext);
             }
 
+            this.isNavigating = false;
+
         } catch (error) {
+            this.isNavigating = false;
             this.handleRouteError(error, routeContext);
         }
     }
@@ -201,10 +239,21 @@ export class Router {
         const [pathname, search] = path.split('?');
         const query = this.parseQuery(search);
 
-        for (const [routePath, route] of this.routes) {
+        // Sort routes to prioritize specific routes over wildcards
+        const sortedRoutes = Array.from(this.routes.entries()).sort((a, b) => {
+            const [pathA] = a;
+            const [pathB] = b;
+            // Wildcard routes go last
+            if (pathA === '*') return 1;
+            if (pathB === '*') return -1;
+            // More specific routes (with more segments) go first
+            return pathB.split('/').length - pathA.split('/').length;
+        });
+
+        for (const [routePath, route] of sortedRoutes) {
             const params = this.matchPath(routePath, pathname);
             if (params !== null) {
-                return { route, params, query };
+                return { route, params, query, routePath };
             }
         }
 

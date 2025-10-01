@@ -20,25 +20,15 @@ framework.route('/completed', () => app.setFilter('completed'));
 // Handle 404s - must come after specific routes
 framework.route('*', () => app.setFilter('all'));
 
-// Initialize the router
-framework.router.init();
-
-// Mount the application
+// Mount the application first
 const container = document.getElementById('todoapp');
 if (container) {
     // Render initial state
     framework.render(app.render(), container);
-
-    // Handle the initial route
-    const initialPath = window.location.hash.slice(1) || '/';
-    if (initialPath.includes('active')) {
-        app.setFilter('active');
-    } else if (initialPath.includes('completed')) {
-        app.setFilter('completed');
-    } else {
-        app.setFilter('all');
-    }
 }
+
+// Initialize the router (will handle initial route automatically)
+framework.router.init();
 
 // Export for debugging
 window.app = app;

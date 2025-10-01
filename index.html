@@ -517,14 +517,14 @@
                     <div class="demo-preview">
                         <h3>State Management Demo</h3>
                         <p>Interactive counter with reactive state updates:</p>
-                        <div style="border: 2px dashed #ddd; padding: 20px; margin-top: 20px; border-radius: 8px; text-align: center;">
+                        <div style="border: 2px dashed var(--bg3); padding: 20px; margin-top: 20px; border-radius: 8px; text-align: center;">
                             <div class="counter-demo">
-                                <h4 id="counter-display" style="margin-bottom: 15px; color: #2c3e50; font-size: 24px;">Counter: 0</h4>
+                                <h4 id="counter-display" style="margin-bottom: 15px; color: var(--yellow-bright); font-size: 24px;">Counter: 0</h4>
                                 <div style="display: flex; gap: 10px; justify-content: center;">
-                                    <button id="increment-btn" style="padding: 10px 20px; font-size: 16px; background: #667eea; color: white; border: none; border-radius: 6px; cursor: pointer;">+1</button>
-                                    <button id="decrement-btn" style="padding: 10px 20px; font-size: 16px; background: #e74c3c; color: white; border: none; border-radius: 6px; cursor: pointer;">-1</button>
+                                    <button id="increment-btn" style="padding: 10px 20px; font-size: 16px; background: var(--blue-bright); color: var(--bg0); border: none; border-radius: 6px; cursor: pointer;">+1</button>
+                                    <button id="decrement-btn" style="padding: 10px 20px; font-size: 16px; background: var(--red-bright); color: var(--bg0); border: none; border-radius: 6px; cursor: pointer;">-1</button>
                                 </div>
-                                <small style="color: #999; margin-top: 15px; display: block;">Demonstrates store creation, state management, and reactive updates</small>
+                                <small style="color: var(--fg3); margin-top: 15px; display: block;">Demonstrates store creation, state management, and reactive updates</small>
                             </div>
                         </div>
                     </div>
@@ -567,15 +567,15 @@ framework.render(app, document.getElementById(<span class="string">'root'</span>
                     <div class="demo-preview">
                         <h3>Event Handling Demo</h3>
                         <p>Various event types and user interactions:</p>
-                        <div style="border: 2px dashed #ddd; padding: 20px; margin-top: 20px; border-radius: 8px;">
+                        <div style="border: 2px dashed var(--bg3); padding: 20px; margin-top: 20px; border-radius: 8px;">
                             <div id="events-container">
-                                <h4 style="margin-bottom: 15px; color: #2c3e50;">Interactive Elements</h4>
+                                <h4 style="margin-bottom: 15px; color: var(--yellow-bright);">Interactive Elements</h4>
                                 <div style="display: flex; flex-direction: column; gap: 15px; align-items: start;">
-                                    <button id="alert-btn" style="padding: 10px 20px; font-size: 16px; background: #27ae60; color: white; border: none; border-radius: 6px; cursor: pointer;">Click for Alert</button>
-                                    <input id="demo-input" placeholder="Type here..." style="padding: 10px; font-size: 16px; border: 2px solid #ddd; border-radius: 6px; width: 200px;">
-                                    <div id="hover-demo" style="padding: 15px; border: 2px solid #ddd; border-radius: 6px; cursor: pointer; background: white; transition: background 0.2s;">Hover over me!</div>
+                                    <button id="alert-btn" style="padding: 10px 20px; font-size: 16px; background: var(--green-bright); color: var(--bg0); border: none; border-radius: 6px; cursor: pointer;">Click for Alert</button>
+                                    <input id="demo-input" placeholder="Type here..." style="padding: 10px; font-size: 16px; border: 2px solid var(--bg3); border-radius: 6px; width: 200px; background: var(--bg0); color: var(--fg);">
+                                    <div id="hover-demo" style="padding: 15px; border: 2px solid var(--bg3); border-radius: 6px; cursor: pointer; background: var(--bg0); color: var(--fg); transition: background 0.2s;">Hover over me!</div>
                                 </div>
-                                <small style="color: #999; margin-top: 15px; display: block;">Try clicking, typing, and hovering. Check console for input events.</small>
+                                <small style="color: var(--fg3); margin-top: 15px; display: block;">Try clicking, typing, and hovering. Check console for input events.</small>
                             </div>
                         </div>
                     </div>
@@ -637,12 +637,12 @@ framework.render(app, document.getElementById(<span class="string">'root'</span>
                     <div class="demo-preview">
                         <h3>Dynamic List Demo</h3>
                         <p>Add, toggle, and delete items dynamically:</p>
-                        <div style="border: 2px dashed #ddd; padding: 20px; margin-top: 20px; border-radius: 8px;">
+                        <div style="border: 2px dashed var(--bg3); padding: 20px; margin-top: 20px; border-radius: 8px;">
                             <div id="mini-todo-container">
-                                <h4 style="margin-bottom: 15px; color: #2c3e50;">Mini Todo List</h4>
-                                <input id="todo-input" placeholder="Add new todo..." style="width: 100%; padding: 10px; font-size: 16px; border: 2px solid #ddd; border-radius: 6px; margin-bottom: 15px;">
+                                <h4 style="margin-bottom: 15px; color: var(--yellow-bright);">Mini Todo List</h4>
+                                <input id="todo-input" placeholder="Add new todo..." style="width: 100%; padding: 10px; font-size: 16px; border: 2px solid var(--bg3); border-radius: 6px; margin-bottom: 15px; background: var(--bg0); color: var(--fg);">
                                 <div id="todo-list"></div>
-                                <small style="color: #999; margin-top: 15px; display: block;">Type and press Enter to add. Click text to toggle. Click × to delete.</small>
+                                <small style="color: var(--fg3); margin-top: 15px; display: block;">Type and press Enter to add. Click text to toggle. Click × to delete.</small>
                             </div>
                         </div>
                     </div>
@@ -696,18 +696,18 @@ framework.route(<span class="string">'/contact'</span>, () => {
                     <div class="demo-preview">
                         <h3>Client-Side Routing Demo</h3>
                         <p>Navigate between different views without page reload:</p>
-                        <div style="border: 2px dashed #ddd; padding: 20px; margin-top: 20px; border-radius: 8px;">
+                        <div style="border: 2px dashed var(--bg3); padding: 20px; margin-top: 20px; border-radius: 8px;">
                             <div id="router-container">
-                                <h4 style="margin-bottom: 15px; color: #2c3e50;">Single Page Application</h4>
+                                <h4 style="margin-bottom: 15px; color: var(--yellow-bright);">Single Page Application</h4>
                                 <nav style="margin-bottom: 20px; display: flex; gap: 10px;">
-                                    <button class="nav-btn active" data-route="home" style="padding: 8px 16px; border: 2px solid #667eea; background: #667eea; color: white; border-radius: 6px; cursor: pointer;">HOME</button>
-                                    <button class="nav-btn" data-route="about" style="padding: 8px 16px; border: 2px solid #667eea; background: white; color: #667eea; border-radius: 6px; cursor: pointer;">ABOUT</button>
-                                    <button class="nav-btn" data-route="contact" style="padding: 8px 16px; border: 2px solid #667eea; background: white; color: #667eea; border-radius: 6px; cursor: pointer;">CONTACT</button>
+                                    <button class="nav-btn active" data-route="home" style="padding: 8px 16px; border: 2px solid var(--blue-bright); background: var(--blue-bright); color: var(--bg0); border-radius: 6px; cursor: pointer;">HOME</button>
+                                    <button class="nav-btn" data-route="about" style="padding: 8px 16px; border: 2px solid var(--blue-bright); background: var(--bg0); color: var(--blue-bright); border-radius: 6px; cursor: pointer;">ABOUT</button>
+                                    <button class="nav-btn" data-route="contact" style="padding: 8px 16px; border: 2px solid var(--blue-bright); background: var(--bg0); color: var(--blue-bright); border-radius: 6px; cursor: pointer;">CONTACT</button>
                                 </nav>
-                                <div id="router-content" style="padding: 20px; background: #f8f9fa; border-radius: 6px; font-size: 18px; min-height: 60px; display: flex; align-items: center;">
+                                <div id="router-content" style="padding: 20px; background: var(--bg0); border: 2px solid var(--bg2); border-radius: 6px; color: var(--fg); font-size: 18px; min-height: 60px; display: flex; align-items: center;">
                                     🏠 Welcome to the Home page!
                                 </div>
-                                <small style="color: #999; margin-top: 15px; display: block;">Click navigation buttons to switch views without page refresh</small>
+                                <small style="color: var(--fg3); margin-top: 15px; display: block;">Click navigation buttons to switch views without page refresh</small>
                             </div>
                         </div>
                     </div>
@@ -739,7 +739,7 @@ framework.route(<span class="string">'/contact'</span>, () => {
             </div>
 
             <div style="margin-top: 60px;">
-                <h3 style="text-align: center; margin-bottom: 30px; color: #2c3e50;">Framework Structure</h3>
+                <h3 style="text-align: center; margin-bottom: 30px; color: var(--yellow-bright);">Framework Structure</h3>
                 <div class="code-block" data-lang="Structure">
 <pre>mini-framework/
 ├── src/core/
@@ -827,12 +827,15 @@ framework.route(<span class="string">'/contact'</span>, () => {
             }
         });
 
+        const hoverDemo = document.getElementById('hover-demo');
+        const originalBg = getComputedStyle(hoverDemo).background;
+
         document.getElementById('hover-demo').addEventListener('mouseover', function(e) {
-            e.target.style.background = '#f0f0f0';
+            e.target.style.background = 'var(--bg2)';
         });
 
         document.getElementById('hover-demo').addEventListener('mouseout', function(e) {
-            e.target.style.background = 'white';
+            e.target.style.background = 'var(--bg0)';
         });
 
         // Mini Todo demo functionality
@@ -845,16 +848,16 @@ framework.route(<span class="string">'/contact'</span>, () => {
 
             todos.forEach(todo => {
                 const todoItem = document.createElement('div');
-                todoItem.style.cssText = 'display: flex; justify-content: space-between; align-items: center; padding: 8px 12px; margin: 5px 0; background: #f8f9fa; border-radius: 4px;';
+                todoItem.style.cssText = 'display: flex; justify-content: space-between; align-items: center; padding: 8px 12px; margin: 5px 0; background: var(--bg0); border: 1px solid var(--bg2); border-radius: 4px;';
 
                 const todoText = document.createElement('span');
                 todoText.textContent = todo.text;
-                todoText.style.cssText = `cursor: pointer; flex: 1; ${todo.completed ? 'text-decoration: line-through; color: #999;' : ''}`;
+                todoText.style.cssText = `cursor: pointer; flex: 1; color: var(--fg); ${todo.completed ? 'text-decoration: line-through; color: var(--fg3);' : ''}`;
                 todoText.addEventListener('click', () => toggleTodo(todo.id));
 
                 const deleteBtn = document.createElement('button');
                 deleteBtn.textContent = '×';
-                deleteBtn.style.cssText = 'background: #e74c3c; color: white; border: none; border-radius: 4px; padding: 4px 8px; cursor: pointer; margin-left: 10px;';
+                deleteBtn.style.cssText = 'background: var(--red-bright); color: var(--bg0); border: none; border-radius: 4px; padding: 4px 8px; cursor: pointer; margin-left: 10px;';
                 deleteBtn.addEventListener('click', () => deleteTodo(todo.id));
 
                 todoItem.appendChild(todoText);
@@ -902,12 +905,12 @@ framework.route(<span class="string">'/contact'</span>, () => {
             // Update nav buttons
             document.querySelectorAll('.nav-btn').forEach(btn => {
                 if (btn.dataset.route === view) {
-                    btn.style.background = '#667eea';
-                    btn.style.color = 'white';
+                    btn.style.background = 'var(--blue-bright)';
+                    btn.style.color = 'var(--bg0)';
                     btn.classList.add('active');
                 } else {
-                    btn.style.background = 'white';
-                    btn.style.color = '#667eea';
+                    btn.style.background = 'var(--bg0)';
+                    btn.style.color = 'var(--blue-bright)';
                     btn.classList.remove('active');
                 }
             });

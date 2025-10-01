@@ -9,7 +9,7 @@ export class TodoHeader {
     }
 
     render() {
-        const headerElement = this.framework.createElement('header', { className: 'header' },
+        const headerElement = this.framework.createElement('header', { className: 'header', key: 'header' },
             this.framework.createElement('h1', {}, 'todos'),
             this.renderNewTodoInput()
         );

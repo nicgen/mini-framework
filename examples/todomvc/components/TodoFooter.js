@@ -13,7 +13,7 @@ export class TodoFooter {
         const activeCount = this.store.selectors.getActiveCount(state);
         const hasCompletedTodos = this.store.selectors.hasCompletedTodos(state);
 
-        const footer = this.framework.createElement('footer', { className: 'footer' },
+        const footer = this.framework.createElement('footer', { className: 'footer', key: 'footer' },
             this.renderTodoCount(activeCount),
             this.renderFilterLinks(currentFilter),
             hasCompletedTodos ? this.renderClearCompleted() : null
@@ -43,11 +43,7 @@ export class TodoFooter {
 
             const link = this.framework.createElement('a', {
                 href: filter.href,
-                className: isSelected ? 'selected' : '',
-                onClick: (event) => {
-                    event.preventDefault();
-                    this.framework.navigate(filter.href);
-                }
+                className: isSelected ? 'selected' : ''
             }, filter.name);
 
             return this.framework.createElement('li', {}, link);

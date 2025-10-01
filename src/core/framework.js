@@ -10,8 +10,12 @@ import { Router } from './router.js';
 
 class MiniFramework {
     constructor(options = {}) {
-        this.vdom = new VirtualDOM();
+        // Initialize EventSystem first
         this.events = new EventSystem();
+
+        // Pass EventSystem to VirtualDOM for integrated event handling
+        this.vdom = new VirtualDOM(this.events);
+
         this.state = new StateManager();
         this.router = new Router();
 

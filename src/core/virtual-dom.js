@@ -14,8 +14,11 @@ class VNode {
 }
 
 export class VirtualDOM {
-    constructor() {
+    constructor(eventSystem = null) {
         this.containerTrees = new Map(); // Track trees per container
+        this.eventSystem = eventSystem; // Reference to EventSystem for cleanup
+        this.elementEventHandlers = new Map(); // Track event handlers per element for cleanup
+        this.lifecycleHooks = new Map(); // Track lifecycle hooks per element
     }
 
     createElement(tag, props = {}, ...children) {
@@ -77,6 +80,13 @@ export class VirtualDOM {
         // Set properties
         this.setProps(element, vnode.props);
 
+        // Call onMount lifecycle hook if provided
+        if (vnode.props.onMount && typeof vnode.props.onMount === 'function') {
+            this.lifecycleHooks.set(element, { onMount: vnode.props.onMount, onUnmount: vnode.props.onUnmount });
+            // Execute onMount after element is fully created
+            Promise.resolve().then(() => vnode.props.onMount(element));
+        }
+
         // Add children
         vnode.children.forEach(child => {
             const childElement = this.createDOMElement(child);
@@ -86,6 +96,38 @@ export class VirtualDOM {
         return element;
     }
 
+    /**
+     * Cleanup element and its children - prevents memory leaks
+     * @param {Element} element - DOM element to cleanup
+     */
+    cleanupElement(element) {
+        if (!element) return;
+
+        // Call onUnmount lifecycle hook
+        const hooks = this.lifecycleHooks.get(element);
+        if (hooks && hooks.onUnmount && typeof hooks.onUnmount === 'function') {
+            hooks.onUnmount(element);
+        }
+        this.lifecycleHooks.delete(element);
+
+        // Clean up event handlers if EventSystem is available
+        if (this.eventSystem) {
+            this.eventSystem.off(element);
+        }
+
+        // Clean up tracked event handlers
+        this.elementEventHandlers.delete(element);
+
+        // Recursively cleanup children
+        if (element.childNodes) {
+            Array.from(element.childNodes).forEach(child => {
+                if (child.nodeType === 1) { // Element node
+                    this.cleanupElement(child);
+                }
+            });
+        }
+    }
+
     setProps(element, props) {
         Object.entries(props).forEach(([key, value]) => {
             if (key === 'className') {
@@ -93,9 +135,22 @@ export class VirtualDOM {
             } else if (key === 'style' && typeof value === 'object') {
                 Object.assign(element.style, value);
             } else if (key.startsWith('on') && typeof value === 'function') {
-                // Handle event props like onClick, onKeydown, etc.
-                const eventType = key.slice(2).toLowerCase(); // onClick -> click
-                element.addEventListener(eventType, value);
+                // Handle event props using EventSystem if available
+                const eventType = key.slice(2).toLowerCase(); // onClick -> click, onDblClick -> dblclick
+
+                if (this.eventSystem) {
+                    // Use custom EventSystem
+                    const unsubscribe = this.eventSystem.on(element, eventType, value);
+
+                    // Track unsubscribe function for cleanup
+                    if (!this.elementEventHandlers.has(element)) {
+                        this.elementEventHandlers.set(element, []);
+                    }
+                    this.elementEventHandlers.get(element).push({ eventType, handler: value, unsubscribe });
+                } else {
+                    // Fallback to native addEventListener if EventSystem not available
+                    element.addEventListener(eventType, value);
+                }
             } else if (key.startsWith('data-') || key.startsWith('aria-')) {
                 element.setAttribute(key, value);
             } else if (key === 'autofocus' || key === 'autoFocus') {
@@ -107,9 +162,16 @@ export class VirtualDOM {
                 }
             } else if (key === 'htmlFor') {
                 element.setAttribute('for', value);
+            } else if (key === 'onMount' || key === 'onUnmount') {
+                // Lifecycle hooks are handled separately, skip them here
+                return;
             } else if (key !== 'key' && key !== 'children') {
+                // Special handling for checkbox/radio 'checked' and 'value' properties
+                if (key === 'checked' || key === 'value' || key === 'selected') {
+                    element[key] = value;
+                }
                 // Handle boolean attributes
-                if (typeof value === 'boolean') {
+                else if (typeof value === 'boolean') {
                     if (value) {
                         element.setAttribute(key, '');
                     } else {
@@ -124,27 +186,157 @@ export class VirtualDOM {
         });
     }
 
+    /**
+     * Key-based reconciliation for better performance with dynamic lists
+     * @param {Element} parent - Parent DOM element
+     * @param {Array} newChildren - New virtual children
+     * @param {Array} oldChildren - Old virtual children
+     */
+    reconcileChildren(parent, newChildren, oldChildren) {
+        // Check if we should use key-based reconciliation
+        // Check BOTH new and old children for keys (important when filtering to empty list!)
+        const hasKeys = newChildren.some(child => child && child.key != null) ||
+                        oldChildren.some(child => child && child.key != null);
+
+        if (hasKeys) {
+            this.reconcileChildrenWithKeys(parent, newChildren, oldChildren);
+        } else {
+            this.reconcileChildrenByIndex(parent, newChildren, oldChildren);
+        }
+    }
+
+    /**
+     * O(n) key-based reconciliation algorithm
+     */
+    reconcileChildrenWithKeys(parent, newChildren, oldChildren) {
+        const oldKeyMap = new Map();
+        const oldDomMap = new Map();
+
+        // Build a map from keys to DOM elements by looking at actual DOM
+        // We'll look for data-id attributes or use the order as fallback
+        const domElements = Array.from(parent.childNodes).filter(node => node.nodeType === 1);
+
+        // Build maps of old children VNodes
+        oldChildren.forEach((child) => {
+            if (child && child.key != null) {
+                oldKeyMap.set(child.key, child);
+            }
+        });
+
+        // Try to map keys to actual DOM elements
+        // Strategy 1: Use data-id attribute if it matches the key
+        domElements.forEach(domElement => {
+            const dataId = domElement.getAttribute('data-id');
+            if (dataId) {
+                const parsedKey = parseFloat(dataId);
+                if (oldKeyMap.has(parsedKey)) {
+                    oldDomMap.set(parsedKey, domElement);
+                }
+            }
+        });
+
+        // Strategy 2: If keys didn't map via data-id, use order
+        // This assumes oldChildren order matches DOM order (which should be true after first render)
+        if (oldDomMap.size === 0 && oldChildren.length === domElements.length) {
+            oldChildren.forEach((child, index) => {
+                if (child && child.key != null && domElements[index]) {
+                    oldDomMap.set(child.key, domElements[index]);
+                }
+            });
+        }
+
+        const newKeySet = new Set();
+        const processedNodes = [];
+
+        // Process new children - create or update nodes
+        newChildren.forEach((newChild) => {
+            if (!newChild) return;
+
+            const key = newChild.key;
+            newKeySet.add(key);
+
+            const oldChild = oldKeyMap.get(key);
+            const oldDomNode = oldDomMap.get(key);
+
+            if (oldChild && oldDomNode) {
+                // Existing child - update it
+                this.updateProps(oldDomNode, newChild.props, oldChild.props);
+                this.reconcileChildren(oldDomNode, newChild.children, oldChild.children);
+                processedNodes.push(oldDomNode);
+            } else {
+                // New child - create it
+                const element = this.createDOMElement(newChild);
+                processedNodes.push(element);
+            }
+        });
+
+        // Remove old children that are no longer present
+        oldChildren.forEach((oldChild) => {
+            if (oldChild && oldChild.key != null && !newKeySet.has(oldChild.key)) {
+                const domNode = oldDomMap.get(oldChild.key);
+                if (domNode && domNode.parentNode === parent) {
+                    this.cleanupElement(domNode);
+                    parent.removeChild(domNode);
+                }
+            }
+        });
+
+        // Reorder/insert nodes to match new order
+        processedNodes.forEach((node, index) => {
+            const currentNode = parent.childNodes[index];
+            if (currentNode !== node) {
+                if (node.parentNode === parent) {
+                    // Node exists in parent but in wrong position - move it
+                    parent.insertBefore(node, currentNode || null);
+                } else {
+                    // Node is new - insert it
+                    parent.insertBefore(node, currentNode || null);
+                }
+            }
+        });
+    }
+
+    /**
+     * Index-based reconciliation (fallback when no keys)
+     */
+    reconcileChildrenByIndex(parent, newChildren, oldChildren) {
+        const maxLength = Math.max(newChildren.length, oldChildren.length);
+
+        for (let i = 0; i < maxLength; i++) {
+            this.updateElement(parent, newChildren[i], oldChildren[i], i);
+        }
+    }
+
     updateElement(parent, newNode, oldNode, index = 0) {
         // Node was removed
         if (!newNode) {
             if (parent.childNodes[index]) {
-                parent.removeChild(parent.childNodes[index]);
+                const node = parent.childNodes[index];
+                this.cleanupElement(node);
+                parent.removeChild(node);
             }
             return;
         }
 
         // Node was added
         if (!oldNode) {
-            parent.appendChild(this.createDOMElement(newNode));
+            const element = this.createDOMElement(newNode);
+            if (parent.childNodes[index]) {
+                parent.insertBefore(element, parent.childNodes[index]);
+            } else {
+                parent.appendChild(element);
+            }
             return;
         }
 
         // Node was replaced
         if (this.hasNodeChanged(newNode, oldNode)) {
-            if (parent.childNodes[index]) {
+            const oldElement = parent.childNodes[index];
+            if (oldElement) {
+                this.cleanupElement(oldElement);
                 parent.replaceChild(
                     this.createDOMElement(newNode),
-                    parent.childNodes[index]
+                    oldElement
                 );
             } else {
                 parent.appendChild(this.createDOMElement(newNode));
@@ -165,16 +357,8 @@ export class VirtualDOM {
         if (element) {
             this.updateProps(element, newNode.props, oldNode.props);
 
-            // Update children
-            const maxLength = Math.max(newNode.children.length, oldNode.children.length);
-            for (let i = 0; i < maxLength; i++) {
-                this.updateElement(
-                    element,
-                    newNode.children[i],
-                    oldNode.children[i],
-                    i
-                );
-            }
+            // Update children using reconciliation
+            this.reconcileChildren(element, newNode.children, oldNode.children);
         }
     }
 
@@ -199,8 +383,23 @@ export class VirtualDOM {
                 } else if (key.startsWith('on') && typeof oldProps[key] === 'function') {
                     // Remove old event listener
                     const eventType = key.slice(2).toLowerCase();
-                    element.removeEventListener(eventType, oldProps[key]);
-                } else if (key !== 'key') {
+
+                    if (this.eventSystem) {
+                        // Using EventSystem - handlers are tracked and cleaned up
+                        const handlers = this.elementEventHandlers.get(element);
+                        if (handlers) {
+                            const handlerEntry = handlers.find(h => h.eventType === eventType && h.handler === oldProps[key]);
+                            if (handlerEntry && handlerEntry.unsubscribe) {
+                                handlerEntry.unsubscribe();
+                                const index = handlers.indexOf(handlerEntry);
+                                if (index > -1) handlers.splice(index, 1);
+                            }
+                        }
+                    } else {
+                        // Fallback to native removeEventListener
+                        element.removeEventListener(eventType, oldProps[key]);
+                    }
+                } else if (key !== 'key' && key !== 'onMount' && key !== 'onUnmount') {
                     element.removeAttribute(key);
                 }
             }
@@ -213,8 +412,22 @@ export class VirtualDOM {
                 if (key.startsWith('on') && typeof oldValue === 'function') {
                     // Remove old event listener
                     const eventType = key.slice(2).toLowerCase();
-                    element.removeEventListener(eventType, oldValue);
+
+                    if (this.eventSystem) {
+                        const handlers = this.elementEventHandlers.get(element);
+                        if (handlers) {
+                            const handlerEntry = handlers.find(h => h.eventType === eventType && h.handler === oldValue);
+                            if (handlerEntry && handlerEntry.unsubscribe) {
+                                handlerEntry.unsubscribe();
+                                const index = handlers.indexOf(handlerEntry);
+                                if (index > -1) handlers.splice(index, 1);
+                            }
+                        }
+                    } else {
+                        element.removeEventListener(eventType, oldValue);
+                    }
                 }
+
                 // Set new prop (including new event listener)
                 if (key === 'className') {
                     element.className = newValue;
@@ -222,7 +435,17 @@ export class VirtualDOM {
                     Object.assign(element.style, newValue);
                 } else if (key.startsWith('on') && typeof newValue === 'function') {
                     const eventType = key.slice(2).toLowerCase();
-                    element.addEventListener(eventType, newValue);
+
+                    if (this.eventSystem) {
+                        const unsubscribe = this.eventSystem.on(element, eventType, newValue);
+
+                        if (!this.elementEventHandlers.has(element)) {
+                            this.elementEventHandlers.set(element, []);
+                        }
+                        this.elementEventHandlers.get(element).push({ eventType, handler: newValue, unsubscribe });
+                    } else {
+                        element.addEventListener(eventType, newValue);
+                    }
                 } else if (key.startsWith('data-') || key.startsWith('aria-')) {
                     element.setAttribute(key, newValue);
                 } else if (key === 'autofocus' || key === 'autoFocus') {
@@ -235,9 +458,18 @@ export class VirtualDOM {
                     }
                 } else if (key === 'htmlFor') {
                     element.setAttribute('for', newValue);
+                } else if (key === 'onMount' || key === 'onUnmount') {
+                    // Lifecycle hooks - update them
+                    const hooks = this.lifecycleHooks.get(element) || {};
+                    hooks[key] = newValue;
+                    this.lifecycleHooks.set(element, hooks);
                 } else if (key !== 'key' && key !== 'children') {
+                    // Special handling for checkbox/radio 'checked' and 'value' properties
+                    if (key === 'checked' || key === 'value' || key === 'selected') {
+                        element[key] = newValue;
+                    }
                     // Handle boolean attributes
-                    if (typeof newValue === 'boolean') {
+                    else if (typeof newValue === 'boolean') {
                         if (newValue) {
                             element.setAttribute(key, '');
                         } else {

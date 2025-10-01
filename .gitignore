@@ -140,6 +140,7 @@ vite.config.ts.timestamp-*
 
 # Project related
 .claude
+CLAUDE.md
 MiniFramework.png
 # debug-todo-filters.html
 # index.html

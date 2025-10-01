@@ -30,8 +30,7 @@ export class TodoApp {
         // Re-render the app when store changes
         const container = document.getElementById('todoapp');
         if (container) {
-            // Clear the Virtual DOM's container tracking to force a fresh render
-            this.framework.vdom.containerTrees.delete(container);
+            // Use proper Virtual DOM diffing instead of forcing full re-render
             this.framework.render(this.render(), container);
         }
     }
@@ -41,26 +40,19 @@ export class TodoApp {
         const filteredTodos = this.store.selectors.getFilteredTodos(state);
         const hasTodos = state.todos.length > 0;
 
-        // Debug logging (uncomment for debugging)
-        // console.log('TodoApp render - Current filter:', state.filter);
-        // console.log('TodoApp render - All todos:', state.todos);
-        // console.log('TodoApp render - Filtered todos:', filteredTodos);
-
         const children = [this.header.render()];
 
         // Main section - only show if there are todos
         if (hasTodos) {
             const toggleAllElements = this.renderToggleAll();
             children.push(
-                this.framework.createElement('section', { className: 'main' },
+                this.framework.createElement('section', { className: 'main', key: 'main' },
                     ...(Array.isArray(toggleAllElements) ? toggleAllElements : [toggleAllElements]),
                     this.list.render(filteredTodos, state.filter)
                 )
             );
-        }
 
-        // Footer - only show if there are todos
-        if (hasTodos) {
+            // Footer - only show if there are todos
             children.push(this.footer.render(state.filter));
         }
 
@@ -76,7 +68,8 @@ export class TodoApp {
             className: 'toggle-all',
             type: 'checkbox',
             checked: areAllCompleted,
-            onChange: () => {
+            onChange: (e) => {
+                console.log('[TodoApp] onChange fired, checked:', e.target.checked, 'timestamp:', Date.now());
                 this.store.dispatch(this.store.actions.toggleAll());
             }
         });

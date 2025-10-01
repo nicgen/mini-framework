@@ -17,8 +17,37 @@ class Store {
         }
     }
 
+    /**
+     * Deep clone helper function
+     * @param {*} obj - Object to clone
+     * @returns {*} Deep cloned object
+     */
+    deepClone(obj) {
+        if (obj === null || typeof obj !== 'object') {
+            return obj;
+        }
+
+        if (obj instanceof Date) {
+            return new Date(obj.getTime());
+        }
+
+        if (obj instanceof Array) {
+            return obj.map(item => this.deepClone(item));
+        }
+
+        if (obj instanceof Object) {
+            const clonedObj = {};
+            for (const key in obj) {
+                if (obj.hasOwnProperty(key)) {
+                    clonedObj[key] = this.deepClone(obj[key]);
+                }
+            }
+            return clonedObj;
+        }
+    }
+
     getState() {
-        return { ...this.state };
+        return this.deepClone(this.state);
     }
 
     setState(newState, action = { type: 'SET_STATE' }) {

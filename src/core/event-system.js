@@ -19,7 +19,7 @@ export class EventSystem {
     }
 
     setupGlobalDelegation() {
-        const eventTypes = ['click', 'change', 'input', 'keydown', 'keyup', 'submit', 'focus', 'blur'];
+        const eventTypes = ['click', 'dblclick', 'change', 'input', 'keydown', 'keyup', 'submit', 'focus', 'blur', 'mousedown', 'mouseup', 'mouseover', 'mouseout'];
 
         eventTypes.forEach(eventType => {
             document.addEventListener(eventType, (e) => {
@@ -105,22 +105,15 @@ export class EventSystem {
 
         const handlers = elementHandlers.get(eventType);
 
-        // Wrap handler to provide additional context
-        const wrappedHandler = (event) => {
-            const context = {
-                element,
-                preventDefault: () => event.preventDefault(),
-                stopPropagation: () => event.stopPropagation(),
-                data: options.data || {}
-            };
+        // Prevent adding the same handler twice
+        if (handlers.includes(handler)) {
+            return () => this.off(element, eventType, handler);
+        }
 
-            return handler.call(element, event, context);
-        };
-
-        handlers.push(wrappedHandler);
+        handlers.push(handler);
 
         // Return unsubscribe function
-        return () => this.off(element, eventType, wrappedHandler);
+        return () => this.off(element, eventType, handler);
     }
 
     off(element, eventType, handler) {
@@ -138,10 +131,16 @@ export class EventSystem {
                 if (index > -1) {
                     handlers.splice(index, 1);
                 }
+
+                // If no more handlers for this event type, clean up the map
+                if (handlers.length === 0) {
+                    elementHandlers.delete(eventType);
+                }
             }
         } else if (eventType) {
             elementHandlers.delete(eventType);
         } else {
+            // Remove all handlers for this element
             this.eventHandlers.delete(element);
         }
     }

@@ -98,6 +98,9 @@ export class TodoItem {
     finishEditing(todoId, newText) {
         if (!this.isEditing || this.editingId !== todoId) return;
 
+        this.isEditing = false;
+        this.editingId = null;
+
         const trimmedText = newText.trim();
 
         if (trimmedText) {
@@ -106,20 +109,20 @@ export class TodoItem {
             // Delete todo if text is empty
             this.store.dispatch(this.store.actions.deleteTodo(todoId));
         }
-
-        this.isEditing = false;
-        this.editingId = null;
     }
 
     cancelEditing() {
         this.isEditing = false;
         this.editingId = null;
-        // Trigger re-render
-        this.forceUpdate();
+        // Trigger re-render by dispatching an action that will cause the component to re-render
+        // We use setFilter with the current filter to trigger a harmless re-render
+        const currentFilter = this.store.selectors.getCurrentFilter(this.store.getState());
+        this.store.dispatch(this.store.actions.setFilter(currentFilter));
     }
 
     forceUpdate() {
-        // Trigger a re-render through the store
-        this.store.dispatch({ type: 'FORCE_UPDATE', payload: { timestamp: Date.now() } });
+        // Trigger a re-render through the store by dispatching the current filter again
+        const currentFilter = this.store.selectors.getCurrentFilter(this.store.getState());
+        this.store.dispatch(this.store.actions.setFilter(currentFilter));
     }
 }

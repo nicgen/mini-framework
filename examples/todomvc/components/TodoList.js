@@ -27,7 +27,15 @@ export class TodoList {
             }
 
             const todoItem = this.todoItems.get(todo.id);
-            return todoItem.render(todo);
+            const renderedItem = todoItem.render(todo);
+
+            // Add key prop for efficient reconciliation
+            if (renderedItem && renderedItem.props) {
+                renderedItem.props.key = todo.id;
+                renderedItem.key = todo.id;
+            }
+
+            return renderedItem;
         });
     }
 
