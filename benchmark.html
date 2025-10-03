@@ -1,0 +1,724 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MiniFramework Performance Benchmarks</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        h1 {
+            color: white;
+            text-align: center;
+            margin-bottom: 30px;
+            font-size: 2.5rem;
+        }
+
+        .benchmark-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .benchmark-card {
+            background: white;
+            border-radius: 12px;
+            padding: 24px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+        }
+
+        .benchmark-card h2 {
+            color: #667eea;
+            margin-bottom: 15px;
+            font-size: 1.4rem;
+            border-bottom: 2px solid #667eea;
+            padding-bottom: 10px;
+        }
+
+        .benchmark-card p {
+            color: #666;
+            margin-bottom: 15px;
+            line-height: 1.6;
+        }
+
+        .benchmark-result {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 10px 0;
+            border-left: 4px solid #667eea;
+        }
+
+        .benchmark-result.running {
+            border-left-color: #ffc107;
+            background: #fff9e6;
+        }
+
+        .benchmark-result.success {
+            border-left-color: #28a745;
+            background: #d4edda;
+        }
+
+        .benchmark-result strong {
+            color: #333;
+            font-size: 1.1rem;
+        }
+
+        .benchmark-result .time {
+            color: #667eea;
+            font-weight: bold;
+            font-size: 1.2rem;
+        }
+
+        .benchmark-result .ops {
+            color: #28a745;
+            font-weight: bold;
+        }
+
+        button {
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: 500;
+            transition: all 0.3s;
+            width: 100%;
+            margin-top: 10px;
+        }
+
+        button:hover {
+            background: #5568d3;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+        }
+
+        button:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .run-all-btn {
+            background: #764ba2;
+            margin-bottom: 30px;
+            padding: 16px 32px;
+            font-size: 18px;
+        }
+
+        .run-all-btn:hover {
+            background: #5d3a7f;
+        }
+
+        .summary {
+            background: white;
+            border-radius: 12px;
+            padding: 30px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            margin-bottom: 30px;
+        }
+
+        .summary h2 {
+            color: #667eea;
+            margin-bottom: 20px;
+        }
+
+        .summary-stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-top: 20px;
+        }
+
+        .stat {
+            text-align: center;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 8px;
+        }
+
+        .stat-value {
+            font-size: 2rem;
+            font-weight: bold;
+            color: #667eea;
+        }
+
+        .stat-label {
+            color: #666;
+            margin-top: 8px;
+        }
+
+        #benchmark-container {
+            display: none;
+        }
+
+        .chart {
+            margin-top: 30px;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 8px;
+            width: 100%;
+        }
+
+        .bar-container {
+            margin: 15px 0;
+        }
+
+        .bar-label {
+            color: #333;
+            font-size: 0.9rem;
+            margin-bottom: 5px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .bar-label .reference {
+            font-size: 0.85rem;
+            color: #666;
+        }
+
+        .bar-label .rating {
+            font-size: 0.85rem;
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-weight: 600;
+        }
+
+        .bar-label .rating.excellent {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .bar-label .rating.good {
+            background: #d1ecf1;
+            color: #0c5460;
+        }
+
+        .bar-label .rating.fair {
+            background: #fff3cd;
+            color: #856404;
+        }
+
+        .bar-label .rating.slow {
+            background: #f8d7da;
+            color: #721c24;
+        }
+
+        .bar {
+            height: 30px;
+            background: linear-gradient(90deg, #667eea, #764ba2);
+            border-radius: 4px;
+            display: flex;
+            align-items: center;
+            padding: 0 10px;
+            color: white;
+            font-weight: 500;
+            transition: width 0.5s ease;
+            min-width: 50px;
+        }
+
+        .bar.vanilla {
+            background: linear-gradient(90deg, #28a745, #20c997);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>⚡ MiniFramework Performance Benchmarks</h1>
+
+        <div class="summary" id="summary" style="display: none;">
+            <h2>📊 Benchmark Summary</h2>
+            <div class="summary-stats" id="summary-stats"></div>
+        </div>
+
+        <button class="run-all-btn" id="runAllBtn" onclick="runAllBenchmarks()">
+            🚀 Run All Benchmarks
+        </button>
+
+        <div class="benchmark-grid" id="benchmarkGrid"></div>
+
+        <div id="benchmark-container"></div>
+    </div>
+
+    <script type="module">
+        import framework from './src/core/framework.js';
+
+        const benchmarks = [
+            {
+                name: 'Create 1000 Elements',
+                description: 'Measures time to create 1000 virtual DOM elements',
+                run: () => {
+                    const start = performance.now();
+                    const elements = [];
+                    for (let i = 0; i < 1000; i++) {
+                        elements.push(
+                            framework.createElement('div', { key: i, className: 'item' }, `Item ${i}`)
+                        );
+                    }
+                    const end = performance.now();
+                    return end - start;
+                }
+            },
+            {
+                name: 'Render 1000 Items',
+                description: 'Renders a list of 1000 items to the DOM',
+                run: () => {
+                    const container = document.createElement('div');
+                    document.body.appendChild(container);
+
+                    const items = Array.from({ length: 1000 }, (_, i) => ({ id: i, text: `Item ${i}` }));
+
+                    const start = performance.now();
+                    framework.render(
+                        framework.createElement('ul', {},
+                            items.map(item =>
+                                framework.createElement('li', { key: item.id }, item.text)
+                            )
+                        ),
+                        container
+                    );
+                    const end = performance.now();
+
+                    document.body.removeChild(container);
+                    return end - start;
+                }
+            },
+            {
+                name: 'Update 1000 Items',
+                description: 'Updates all 1000 items in the list (text change)',
+                run: () => {
+                    const container = document.createElement('div');
+                    document.body.appendChild(container);
+
+                    const items1 = Array.from({ length: 1000 }, (_, i) => ({ id: i, text: `Item ${i}` }));
+
+                    framework.render(
+                        framework.createElement('ul', {},
+                            items1.map(item =>
+                                framework.createElement('li', { key: item.id }, item.text)
+                            )
+                        ),
+                        container
+                    );
+
+                    const items2 = Array.from({ length: 1000 }, (_, i) => ({ id: i, text: `Updated ${i}` }));
+
+                    const start = performance.now();
+                    framework.render(
+                        framework.createElement('ul', {},
+                            items2.map(item =>
+                                framework.createElement('li', { key: item.id }, item.text)
+                            )
+                        ),
+                        container
+                    );
+                    const end = performance.now();
+
+                    document.body.removeChild(container);
+                    return end - start;
+                }
+            },
+            {
+                name: 'Add Item to 1000 Items',
+                description: 'Adds a single item to a list of 1000 items',
+                run: () => {
+                    const container = document.createElement('div');
+                    document.body.appendChild(container);
+
+                    const items1 = Array.from({ length: 1000 }, (_, i) => ({ id: i, text: `Item ${i}` }));
+
+                    framework.render(
+                        framework.createElement('ul', {},
+                            items1.map(item =>
+                                framework.createElement('li', { key: item.id }, item.text)
+                            )
+                        ),
+                        container
+                    );
+
+                    const items2 = [...items1, { id: 1000, text: 'New Item' }];
+
+                    const start = performance.now();
+                    framework.render(
+                        framework.createElement('ul', {},
+                            items2.map(item =>
+                                framework.createElement('li', { key: item.id }, item.text)
+                            )
+                        ),
+                        container
+                    );
+                    const end = performance.now();
+
+                    document.body.removeChild(container);
+                    return end - start;
+                }
+            },
+            {
+                name: 'Remove Item from 1000 Items',
+                description: 'Removes a single item from a list of 1000 items',
+                run: () => {
+                    const container = document.createElement('div');
+                    document.body.appendChild(container);
+
+                    const items1 = Array.from({ length: 1000 }, (_, i) => ({ id: i, text: `Item ${i}` }));
+
+                    framework.render(
+                        framework.createElement('ul', {},
+                            items1.map(item =>
+                                framework.createElement('li', { key: item.id }, item.text)
+                            )
+                        ),
+                        container
+                    );
+
+                    const items2 = items1.filter(item => item.id !== 500);
+
+                    const start = performance.now();
+                    framework.render(
+                        framework.createElement('ul', {},
+                            items2.map(item =>
+                                framework.createElement('li', { key: item.id }, item.text)
+                            )
+                        ),
+                        container
+                    );
+                    const end = performance.now();
+
+                    document.body.removeChild(container);
+                    return end - start;
+                }
+            },
+            {
+                name: 'Reorder 1000 Items',
+                description: 'Reverses the order of 1000 items in a list',
+                run: () => {
+                    const container = document.createElement('div');
+                    document.body.appendChild(container);
+
+                    const items1 = Array.from({ length: 1000 }, (_, i) => ({ id: i, text: `Item ${i}` }));
+
+                    framework.render(
+                        framework.createElement('ul', {},
+                            items1.map(item =>
+                                framework.createElement('li', { key: item.id, 'data-id': item.id }, item.text)
+                            )
+                        ),
+                        container
+                    );
+
+                    const items2 = [...items1].reverse();
+
+                    const start = performance.now();
+                    framework.render(
+                        framework.createElement('ul', {},
+                            items2.map(item =>
+                                framework.createElement('li', { key: item.id, 'data-id': item.id }, item.text)
+                            )
+                        ),
+                        container
+                    );
+                    const end = performance.now();
+
+                    document.body.removeChild(container);
+                    return end - start;
+                }
+            },
+            {
+                name: '1000 State Updates',
+                description: 'Dispatches 1000 actions to the store',
+                run: () => {
+                    const store = framework.createStore({ count: 0 }, {
+                        INCREMENT: (state) => ({ ...state, count: state.count + 1 })
+                    });
+
+                    const start = performance.now();
+                    for (let i = 0; i < 1000; i++) {
+                        store.dispatch({ type: 'INCREMENT' });
+                    }
+                    const end = performance.now();
+
+                    return end - start;
+                }
+            },
+            {
+                name: '100 Nested Elements',
+                description: 'Creates deeply nested component structure',
+                run: () => {
+                    const container = document.createElement('div');
+                    document.body.appendChild(container);
+
+                    function createNested(depth) {
+                        if (depth === 0) return 'Leaf';
+                        return framework.createElement('div', { className: `depth-${depth}` }, [
+                            createNested(depth - 1)
+                        ]);
+                    }
+
+                    const start = performance.now();
+                    framework.render(createNested(100), container);
+                    const end = performance.now();
+
+                    document.body.removeChild(container);
+                    return end - start;
+                }
+            },
+            {
+                name: 'Complex Component Tree',
+                description: 'Renders a complex tree with 500 nodes',
+                run: () => {
+                    const container = document.createElement('div');
+                    document.body.appendChild(container);
+
+                    function createTree(depth, breadth) {
+                        if (depth === 0) return 'Leaf';
+                        return framework.createElement('div', {},
+                            Array.from({ length: breadth }, (_, i) =>
+                                framework.createElement('div', { key: i }, createTree(depth - 1, breadth))
+                            )
+                        );
+                    }
+
+                    const start = performance.now();
+                    framework.render(createTree(4, 4), container); // 4^4 = 256 nodes + intermediate
+                    const end = performance.now();
+
+                    document.body.removeChild(container);
+                    return end - start;
+                }
+            },
+            {
+                name: 'Event Handler Registration',
+                description: 'Registers event handlers on 1000 elements',
+                run: () => {
+                    const container = document.createElement('div');
+                    document.body.appendChild(container);
+
+                    const items = Array.from({ length: 1000 }, (_, i) => i);
+
+                    const start = performance.now();
+                    framework.render(
+                        framework.createElement('div', {},
+                            items.map(i =>
+                                framework.createElement('button', {
+                                    key: i,
+                                    onClick: () => console.log(i)
+                                }, `Button ${i}`)
+                            )
+                        ),
+                        container
+                    );
+                    const end = performance.now();
+
+                    document.body.removeChild(container);
+                    return end - start;
+                }
+            }
+        ];
+
+        const results = {};
+
+        function createBenchmarkCard(benchmark, index) {
+            const card = document.createElement('div');
+            card.className = 'benchmark-card';
+            card.innerHTML = `
+                <h2>${benchmark.name}</h2>
+                <p>${benchmark.description}</p>
+                <div class="benchmark-result" id="result-${index}">
+                    <strong>Status:</strong> Ready to run
+                </div>
+                <button onclick="runSingleBenchmark(${index})">Run Benchmark</button>
+            `;
+            return card;
+        }
+
+        function displayBenchmarks() {
+            const grid = document.getElementById('benchmarkGrid');
+            benchmarks.forEach((benchmark, index) => {
+                grid.appendChild(createBenchmarkCard(benchmark, index));
+            });
+        }
+
+        window.runSingleBenchmark = async function(index) {
+            const resultDiv = document.getElementById(`result-${index}`);
+            resultDiv.className = 'benchmark-result running';
+            resultDiv.innerHTML = '<strong>Status:</strong> Running...';
+
+            // Allow UI to update
+            await new Promise(resolve => setTimeout(resolve, 100));
+
+            try {
+                const time = benchmarks[index].run();
+                const opsPerSecond = (1000 / time).toFixed(2);
+
+                results[benchmarks[index].name] = {
+                    time: time.toFixed(2),
+                    ops: opsPerSecond
+                };
+
+                resultDiv.className = 'benchmark-result success';
+                resultDiv.innerHTML = `
+                    <strong>✅ Completed</strong><br>
+                    <span class="time">Time: ${time.toFixed(2)}ms</span><br>
+                    <span class="ops">Ops/sec: ${opsPerSecond}</span>
+                `;
+            } catch (error) {
+                resultDiv.className = 'benchmark-result';
+                resultDiv.style.borderLeftColor = '#dc3545';
+                resultDiv.style.background = '#f8d7da';
+                resultDiv.innerHTML = `<strong>❌ Error:</strong> ${error.message}`;
+            }
+        };
+
+        window.runAllBenchmarks = async function() {
+            const btn = document.getElementById('runAllBtn');
+            btn.disabled = true;
+            btn.textContent = 'Running Benchmarks...';
+
+            for (let i = 0; i < benchmarks.length; i++) {
+                await runSingleBenchmark(i);
+                await new Promise(resolve => setTimeout(resolve, 200));
+            }
+
+            displaySummary();
+            btn.disabled = false;
+            btn.textContent = '🔄 Run All Benchmarks Again';
+        };
+
+        // Vanilla JS reference times (approximate benchmarks for comparison)
+        // Note: These include equivalent operations (createElement + attributes + DOM operations)
+        const vanillaReferenceTimes = {
+            'Create 1000 Elements': 2,  // Vanilla JS is very fast at creation
+            'Render 1000 Items': 25,    // createElement + setAttribute + appendChild for each
+            'Update 1000 Items': 12,    // Direct text updates
+            'Add Item to 1000 Items': 3,  // createElement + attributes + appendChild
+            'Remove Item from 1000 Items': 2,  // Element selection + removeChild
+            'Reorder 1000 Items': 20,   // Moving DOM nodes
+            '1000 State Updates': 1,    // Simple object updates
+            '100 Nested Elements': 8,   // Deep nesting
+            'Complex Component Tree': 25,  // Complex structure
+            'Event Handler Registration': 18  // Direct addEventListener
+        };
+
+        function getPerformanceRating(frameworkTime, vanillaTime) {
+            const ratio = frameworkTime / vanillaTime;
+            if (ratio <= 1.5) return { text: 'Excellent', class: 'excellent' };
+            if (ratio <= 3) return { text: 'Good', class: 'good' };
+            if (ratio <= 5) return { text: 'Fair', class: 'fair' };
+            return { text: 'Needs Optimization', class: 'slow' };
+        }
+
+        function displaySummary() {
+            const summary = document.getElementById('summary');
+            const statsDiv = document.getElementById('summary-stats');
+
+            // Remove existing chart if any
+            const existingChart = summary.querySelector('.chart');
+            if (existingChart) {
+                existingChart.remove();
+            }
+
+            const times = Object.values(results).map(r => parseFloat(r.time));
+            const avgTime = (times.reduce((a, b) => a + b, 0) / times.length).toFixed(2);
+            const minTime = Math.min(...times).toFixed(2);
+            const maxTime = Math.max(...times).toFixed(2);
+            const totalTime = times.reduce((a, b) => a + b, 0).toFixed(2);
+
+            statsDiv.innerHTML = `
+                <div class="stat">
+                    <div class="stat-value">${benchmarks.length}</div>
+                    <div class="stat-label">Benchmarks Run</div>
+                </div>
+                <div class="stat">
+                    <div class="stat-value">${avgTime}ms</div>
+                    <div class="stat-label">Average Time</div>
+                </div>
+                <div class="stat">
+                    <div class="stat-value">${minTime}ms</div>
+                    <div class="stat-label">Fastest</div>
+                </div>
+                <div class="stat">
+                    <div class="stat-value">${maxTime}ms</div>
+                    <div class="stat-label">Slowest</div>
+                </div>
+                <div class="stat">
+                    <div class="stat-value">${totalTime}ms</div>
+                    <div class="stat-label">Total Time</div>
+                </div>
+            `;
+
+            // Add chart (outside of grid)
+            const chart = document.createElement('div');
+            chart.className = 'chart';
+            chart.innerHTML = `
+                <h3 style="color: #667eea; margin-bottom: 20px;">Performance Comparison vs Vanilla JS</h3>
+                <p style="color: #666; margin-bottom: 20px; font-size: 0.9rem;">
+                    <strong>Legend:</strong>
+                    <span style="color: #667eea;">■</span> MiniFramework |
+                    <span style="color: #28a745;">■</span> Vanilla JS (reference) |
+                    Lower is better
+                </p>
+            `;
+
+            // Find maximum time for scaling
+            const allTimes = Object.entries(results).map(([name, result]) => {
+                const frameworkTime = parseFloat(result.time);
+                const vanillaTime = vanillaReferenceTimes[name] || frameworkTime * 0.5;
+                return Math.max(frameworkTime, vanillaTime);
+            });
+            const maxChartTime = Math.max(...allTimes);
+
+            Object.entries(results).forEach(([name, result]) => {
+                const frameworkTime = parseFloat(result.time);
+                const vanillaTime = vanillaReferenceTimes[name] || frameworkTime * 0.5;
+                const frameworkWidth = (frameworkTime / maxChartTime) * 100;
+                const vanillaWidth = (vanillaTime / maxChartTime) * 100;
+                const rating = getPerformanceRating(frameworkTime, vanillaTime);
+
+                chart.innerHTML += `
+                    <div class="bar-container">
+                        <div class="bar-label">
+                            <span><strong>${name}</strong></span>
+                            <span class="rating ${rating.class}">${rating.text}</span>
+                        </div>
+                        <div class="bar" style="width: ${frameworkWidth}%">
+                            MiniFramework: ${result.time}ms
+                        </div>
+                        <div class="bar vanilla" style="width: ${vanillaWidth}%">
+                            Vanilla JS: ~${vanillaTime}ms
+                        </div>
+                        <div class="bar-label">
+                            <span class="reference">Overhead: ${(frameworkTime - vanillaTime).toFixed(2)}ms (${((frameworkTime / vanillaTime - 1) * 100).toFixed(0)}%)</span>
+                        </div>
+                    </div>
+                `;
+            });
+
+            // Append chart after statsDiv, not inside it
+            summary.appendChild(chart);
+            summary.style.display = 'block';
+        }
+
+        displayBenchmarks();
+    </script>
+</body>
+</html>

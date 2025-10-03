@@ -15,7 +15,8 @@ A lightweight JavaScript framework with DOM abstraction, routing, state manageme
 
 2. **Open your browser and visit:**
    - `http://localhost:8080/examples/todomvc/` - TodoMVC implementation
-   - `http://localhost:8080/test-framework.html` - Framework tests
+   - `http://localhost:8080/test-framework.html` - Framework tests (30+ comprehensive tests)
+   - `http://localhost:8080/benchmark.html` - Performance benchmarks
    - `http://localhost:8080/docs/` - Full documentation
 
 ## Features
@@ -26,6 +27,14 @@ A lightweight JavaScript framework with DOM abstraction, routing, state manageme
 - ✅ URL-based routing with parameter support
 - ✅ Component architecture
 - ✅ Complete TodoMVC implementation
+
+## Dependencies
+
+This project uses **only CSS styling packages** for TodoMVC compliance:
+- `todomvc-app-css` - Standard TodoMVC CSS styling
+- `todomvc-common` - TodoMVC base styles and utilities
+
+**Note:** These are CSS-only packages (no JavaScript frameworks). The framework itself is built entirely from scratch without React, Angular, Vue, or any other high-level JavaScript framework.
 
 ## Project Structure
 

@@ -260,8 +260,11 @@ export class VirtualDOM {
 
             if (oldChild && oldDomNode) {
                 // Existing child - update it
-                this.updateProps(oldDomNode, newChild.props, oldChild.props);
-                this.reconcileChildren(oldDomNode, newChild.children, oldChild.children);
+                // Optimization: Skip updates if VNode references are identical (no changes)
+                if (oldChild !== newChild) {
+                    this.updateProps(oldDomNode, newChild.props, oldChild.props);
+                    this.reconcileChildren(oldDomNode, newChild.children, oldChild.children);
+                }
                 processedNodes.push(oldDomNode);
             } else {
                 // New child - create it

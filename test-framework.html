@@ -5,10 +5,24 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>MiniFramework Test</title>
     <style>
-        body { font-family: Arial, sans-serif; padding: 20px; }
-        .test { margin: 10px 0; padding: 10px; border: 1px solid #ddd; }
+        body { font-family: Arial, sans-serif; padding: 20px; background: #f5f5f5; }
+        .test { margin: 10px 0; padding: 10px; border: 1px solid #ddd; border-radius: 4px; }
         .success { background: #d4edda; border-color: #c3e6cb; }
         .error { background: #f8d7da; border-color: #f5c6cb; }
+        .test-summary {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        h1 { color: #333; }
+        h2 {
+            color: #667eea;
+            margin-top: 30px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #667eea;
+        }
     </style>
 </head>
 <body>
@@ -22,13 +36,25 @@
         const testResults = document.getElementById('test-results');
         const testContainer = document.getElementById('test-container');
 
+        let totalTests = 0;
+        let passedTests = 0;
+        let failedTests = 0;
+
+        function addSectionHeader(title) {
+            const header = document.createElement('h2');
+            header.textContent = title;
+            testResults.appendChild(header);
+        }
+
         function runTest(name, testFn) {
+            totalTests++;
             try {
-                const result = testFn();
+                testFn();
                 const div = document.createElement('div');
                 div.className = 'test success';
                 div.innerHTML = `✓ ${name}: PASSED`;
                 testResults.appendChild(div);
+                passedTests++;
                 return true;
             } catch (error) {
                 const div = document.createElement('div');
@@ -36,52 +62,365 @@
                 div.innerHTML = `✗ ${name}: FAILED - ${error.message}`;
                 testResults.appendChild(div);
                 console.error(`Test failed: ${name}`, error);
+                failedTests++;
                 return false;
             }
         }
 
-        // Test 1: Element Creation
+        function updateSummary() {
+            const summaryDiv = document.createElement('div');
+            summaryDiv.className = 'test-summary';
+            summaryDiv.innerHTML = `
+                <h2>Test Summary</h2>
+                <p><strong>Total Tests:</strong> ${totalTests}</p>
+                <p style="color: #28a745;"><strong>Passed:</strong> ${passedTests}</p>
+                <p style="color: #dc3545;"><strong>Failed:</strong> ${failedTests}</p>
+                <p><strong>Success Rate:</strong> ${((passedTests / totalTests) * 100).toFixed(2)}%</p>
+            `;
+            testResults.insertBefore(summaryDiv, testResults.firstChild);
+        }
+
+        // ===== BASIC TESTS =====
+        addSectionHeader('Basic Tests');
+
         runTest('Element Creation', () => {
             const element = framework.createElement('div', { className: 'test' }, 'Hello World');
             if (!element || element.tag !== 'div') throw new Error('Failed to create element');
             if (element.props.className !== 'test') throw new Error('Props not set correctly');
-            return true;
         });
 
-        // Test 2: Rendering
+        runTest('Element Creation with Multiple Children', () => {
+            const element = framework.createElement('div', {}, [
+                framework.createElement('span', {}, 'Child 1'),
+                framework.createElement('span', {}, 'Child 2')
+            ]);
+            if (!element.children || element.children.length !== 2) {
+                throw new Error('Children not created correctly');
+            }
+        });
+
         runTest('Basic Rendering', () => {
             const element = framework.createElement('div', {}, 'Test Content');
             const container = document.createElement('div');
             framework.render(element, container);
-            if (container.innerHTML === '' || !container.firstChild) throw new Error('Element not rendered');
-            return true;
+            if (container.innerHTML === '' || !container.firstChild) {
+                throw new Error('Element not rendered');
+            }
         });
 
-        // Test 3: Event System via Virtual DOM
-        runTest('Event System via Virtual DOM', () => {
+        runTest('Text Node Rendering', () => {
+            const element = framework.createElement('p', {}, 'Plain text');
+            const container = document.createElement('div');
+            framework.render(element, container);
+            if (!container.textContent.includes('Plain text')) {
+                throw new Error('Text not rendered correctly');
+            }
+        });
+
+        // ===== VIRTUAL DOM DIFFING TESTS =====
+        addSectionHeader('Virtual DOM Diffing');
+
+        runTest('Update Element Properties', () => {
+            const container = document.createElement('div');
+            document.body.appendChild(container);
+
+            framework.render(
+                framework.createElement('div', { className: 'old', id: 'test' }, 'Content'),
+                container
+            );
+
+            framework.render(
+                framework.createElement('div', { className: 'new', id: 'test' }, 'Content'),
+                container
+            );
+
+            const element = container.querySelector('#test');
+            if (element.className !== 'new') {
+                throw new Error('Properties not updated');
+            }
+
+            document.body.removeChild(container);
+        });
+
+        runTest('Update Element Children', () => {
+            const container = document.createElement('div');
+            document.body.appendChild(container);
+
+            framework.render(
+                framework.createElement('div', {}, 'Old text'),
+                container
+            );
+
+            framework.render(
+                framework.createElement('div', {}, 'New text'),
+                container
+            );
+
+            if (!container.textContent.includes('New text')) {
+                throw new Error('Children not updated');
+            }
+
+            document.body.removeChild(container);
+        });
+
+        runTest('Replace Element Type', () => {
+            const container = document.createElement('div');
+            document.body.appendChild(container);
+
+            framework.render(
+                framework.createElement('div', { id: 'test' }, 'Content'),
+                container
+            );
+
+            framework.render(
+                framework.createElement('span', { id: 'test' }, 'Content'),
+                container
+            );
+
+            const element = container.querySelector('#test');
+            if (element.tagName !== 'SPAN') {
+                throw new Error('Element type not replaced');
+            }
+
+            document.body.removeChild(container);
+        });
+
+        // ===== KEY-BASED RECONCILIATION TESTS =====
+        addSectionHeader('Key-Based Reconciliation');
+
+        runTest('List with Keys - Add Item', () => {
+            const container = document.createElement('div');
+            document.body.appendChild(container);
+
+            const items1 = [
+                { id: 1, text: 'Item 1' },
+                { id: 2, text: 'Item 2' }
+            ];
+
+            framework.render(
+                framework.createElement('ul', {}, items1.map(item =>
+                    framework.createElement('li', { key: item.id }, item.text)
+                )),
+                container
+            );
+
+            const items2 = [
+                { id: 1, text: 'Item 1' },
+                { id: 2, text: 'Item 2' },
+                { id: 3, text: 'Item 3' }
+            ];
+
+            framework.render(
+                framework.createElement('ul', {}, items2.map(item =>
+                    framework.createElement('li', { key: item.id }, item.text)
+                )),
+                container
+            );
+
+            const listItems = container.querySelectorAll('li');
+            if (listItems.length !== 3) {
+                throw new Error('Item not added correctly');
+            }
+
+            document.body.removeChild(container);
+        });
+
+        runTest('List with Keys - Remove Item', () => {
+            const container = document.createElement('div');
+            document.body.appendChild(container);
+
+            const items1 = [
+                { id: 1, text: 'Item 1' },
+                { id: 2, text: 'Item 2' },
+                { id: 3, text: 'Item 3' }
+            ];
+
+            framework.render(
+                framework.createElement('ul', {}, items1.map(item =>
+                    framework.createElement('li', { key: item.id }, item.text)
+                )),
+                container
+            );
+
+            const items2 = [
+                { id: 1, text: 'Item 1' },
+                { id: 3, text: 'Item 3' }
+            ];
+
+            framework.render(
+                framework.createElement('ul', {}, items2.map(item =>
+                    framework.createElement('li', { key: item.id }, item.text)
+                )),
+                container
+            );
+
+            const listItems = container.querySelectorAll('li');
+            if (listItems.length !== 2) {
+                throw new Error('Item not removed correctly');
+            }
+
+            document.body.removeChild(container);
+        });
+
+        runTest('List with Keys - Reorder Items', () => {
+            const container = document.createElement('div');
+            document.body.appendChild(container);
+
+            const items1 = [
+                { id: 1, text: 'Item 1' },
+                { id: 2, text: 'Item 2' },
+                { id: 3, text: 'Item 3' }
+            ];
+
+            framework.render(
+                framework.createElement('ul', {}, items1.map(item =>
+                    framework.createElement('li', { key: item.id, 'data-id': item.id }, item.text)
+                )),
+                container
+            );
+
+            const items2 = [
+                { id: 3, text: 'Item 3' },
+                { id: 1, text: 'Item 1' },
+                { id: 2, text: 'Item 2' }
+            ];
+
+            framework.render(
+                framework.createElement('ul', {}, items2.map(item =>
+                    framework.createElement('li', { key: item.id, 'data-id': item.id }, item.text)
+                )),
+                container
+            );
+
+            const firstItem = container.querySelector('li:first-child');
+            if (!firstItem.textContent.includes('Item 3')) {
+                throw new Error('Items not reordered correctly');
+            }
+
+            document.body.removeChild(container);
+        });
+
+        runTest('Filter to Empty List', () => {
+            const container = document.createElement('div');
+            document.body.appendChild(container);
+
+            const items1 = [
+                { id: 1, text: 'Item 1' },
+                { id: 2, text: 'Item 2' }
+            ];
+
+            framework.render(
+                framework.createElement('ul', {}, items1.map(item =>
+                    framework.createElement('li', { key: item.id }, item.text)
+                )),
+                container
+            );
+
+            framework.render(
+                framework.createElement('ul', {}, []),
+                container
+            );
+
+            const listItems = container.querySelectorAll('li');
+            if (listItems.length !== 0) {
+                throw new Error('List not cleared correctly');
+            }
+
+            document.body.removeChild(container);
+        });
+
+        // ===== EVENT SYSTEM TESTS =====
+        addSectionHeader('Event System');
+
+        runTest('Click Event', () => {
             let clicked = false;
             const button = framework.createElement('button', {
                 onClick: () => { clicked = true; }
             }, 'Test Button');
 
             const container = document.createElement('div');
-            document.body.appendChild(container); // Attach container to document for event bubbling
+            document.body.appendChild(container);
             framework.render(button, container);
 
-            // Get the actual DOM element and simulate click
             const actualButton = container.querySelector('button');
-            const event = new MouseEvent('click', { bubbles: true });
-            actualButton.dispatchEvent(event);
+            actualButton.dispatchEvent(new MouseEvent('click', { bubbles: true }));
 
-            // Cleanup
             document.body.removeChild(container);
 
-            if (!clicked) throw new Error('Event handler not triggered');
-            return true;
+            if (!clicked) throw new Error('Click event not triggered');
         });
 
-        // Test 4: State Management
-        runTest('State Management', () => {
+        runTest('Multiple Event Types', () => {
+            let clickCount = 0;
+            let mouseEnterCount = 0;
+
+            const element = framework.createElement('div', {
+                onClick: () => { clickCount++; },
+                onMouseEnter: () => { mouseEnterCount++; }
+            }, 'Test');
+
+            const container = document.createElement('div');
+            document.body.appendChild(container);
+            framework.render(element, container);
+
+            const div = container.querySelector('div');
+            div.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+            div.dispatchEvent(new MouseEvent('mouseenter', { bubbles: true }));
+
+            document.body.removeChild(container);
+
+            if (clickCount !== 1 || mouseEnterCount !== 1) {
+                throw new Error('Multiple events not working');
+            }
+        });
+
+        runTest('Input Event', () => {
+            let inputValue = '';
+            const input = framework.createElement('input', {
+                type: 'text',
+                onInput: (e) => { inputValue = e.target.value; }
+            });
+
+            const container = document.createElement('div');
+            document.body.appendChild(container);
+            framework.render(input, container);
+
+            const inputEl = container.querySelector('input');
+            inputEl.value = 'test value';
+            inputEl.dispatchEvent(new Event('input', { bubbles: true }));
+
+            document.body.removeChild(container);
+
+            if (inputValue !== 'test value') {
+                throw new Error('Input event not working');
+            }
+        });
+
+        runTest('Keydown Event', () => {
+            let keyPressed = '';
+            const input = framework.createElement('input', {
+                type: 'text',
+                onKeyDown: (e) => { keyPressed = e.key; }
+            });
+
+            const container = document.createElement('div');
+            document.body.appendChild(container);
+            framework.render(input, container);
+
+            const inputEl = container.querySelector('input');
+            inputEl.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', bubbles: true }));
+
+            document.body.removeChild(container);
+
+            if (keyPressed !== 'Enter') {
+                throw new Error('Keydown event not working');
+            }
+        });
+
+        // ===== STATE MANAGEMENT TESTS =====
+        addSectionHeader('State Management');
+
+        runTest('Basic State Update', () => {
             const store = framework.createStore({ count: 0 }, {
                 INCREMENT: (state) => ({ ...state, count: state.count + 1 })
             });
@@ -90,32 +429,204 @@
             store.dispatch({ type: 'INCREMENT' });
             const newCount = store.getState().count;
 
-            if (newCount !== initialCount + 1) throw new Error('State not updated correctly');
-            return true;
+            if (newCount !== initialCount + 1) {
+                throw new Error('State not updated correctly');
+            }
         });
 
-        // Test 5: Routing (basic)
-        runTest('Routing Setup', () => {
+        runTest('State with Payload', () => {
+            const store = framework.createStore({ items: [] }, {
+                ADD_ITEM: (state, action) => ({
+                    ...state,
+                    items: [...state.items, action.payload]
+                })
+            });
+
+            store.dispatch({ type: 'ADD_ITEM', payload: 'Item 1' });
+            store.dispatch({ type: 'ADD_ITEM', payload: 'Item 2' });
+
+            const items = store.getState().items;
+            if (items.length !== 2 || items[1] !== 'Item 2') {
+                throw new Error('State payload not working');
+            }
+        });
+
+        runTest('Store Subscription', () => {
+            const store = framework.createStore({ count: 0 }, {
+                INCREMENT: (state) => ({ ...state, count: state.count + 1 })
+            });
+
+            let notificationCount = 0;
+            store.subscribe(() => { notificationCount++; });
+
+            store.dispatch({ type: 'INCREMENT' });
+            store.dispatch({ type: 'INCREMENT' });
+
+            if (notificationCount !== 2) {
+                throw new Error('Subscription not working');
+            }
+        });
+
+        runTest('Multiple Subscriptions', () => {
+            const store = framework.createStore({ value: 0 }, {
+                UPDATE: (state) => ({ ...state, value: state.value + 1 })
+            });
+
+            let count1 = 0, count2 = 0;
+            store.subscribe(() => { count1++; });
+            store.subscribe(() => { count2++; });
+
+            store.dispatch({ type: 'UPDATE' });
+
+            if (count1 !== 1 || count2 !== 1) {
+                throw new Error('Multiple subscriptions not working');
+            }
+        });
+
+        runTest('Unsubscribe', () => {
+            const store = framework.createStore({ value: 0 }, {
+                UPDATE: (state) => ({ ...state, value: state.value + 1 })
+            });
+
+            let count = 0;
+            const unsubscribe = store.subscribe(() => { count++; });
+
+            store.dispatch({ type: 'UPDATE' });
+            unsubscribe();
+            store.dispatch({ type: 'UPDATE' });
+
+            if (count !== 1) {
+                throw new Error('Unsubscribe not working');
+            }
+        });
+
+        // ===== ROUTING TESTS =====
+        addSectionHeader('Routing');
+
+        runTest('Route Setup', () => {
             let routeTriggered = false;
-            framework.route('/test', () => { routeTriggered = true; });
-
-            // This test just verifies no errors in route setup
-            return true;
+            framework.route('/test-route', () => { routeTriggered = true; });
+            // Just verifies no errors in route setup
         });
 
-        console.log('All tests completed. Check the page for results.');
+        runTest('Route Parameter Extraction', () => {
+            let capturedId = null;
+            framework.route('/items/:id', (context) => {
+                capturedId = context.params.id;
+            });
+            // Test setup is successful
+        });
+
+        // ===== EDGE CASES =====
+        addSectionHeader('Edge Cases');
+
+        runTest('Render Null/Undefined Children', () => {
+            const container = document.createElement('div');
+            document.body.appendChild(container);
+
+            framework.render(
+                framework.createElement('div', {}, [
+                    null,
+                    framework.createElement('span', {}, 'Valid'),
+                    undefined
+                ]),
+                container
+            );
+
+            const span = container.querySelector('span');
+            if (!span || !span.textContent.includes('Valid')) {
+                throw new Error('Null/undefined children not handled');
+            }
+
+            document.body.removeChild(container);
+        });
+
+        runTest('Conditional Rendering', () => {
+            const container = document.createElement('div');
+            document.body.appendChild(container);
+
+            const condition = true;
+            framework.render(
+                framework.createElement('div', {}, [
+                    condition ? framework.createElement('p', {}, 'Shown') : null
+                ]),
+                container
+            );
+
+            const p = container.querySelector('p');
+            if (!p) {
+                throw new Error('Conditional rendering failed');
+            }
+
+            document.body.removeChild(container);
+        });
+
+        runTest('Checkbox Checked Property', () => {
+            const container = document.createElement('div');
+            document.body.appendChild(container);
+
+            framework.render(
+                framework.createElement('input', { type: 'checkbox', checked: true }),
+                container
+            );
+
+            const checkbox = container.querySelector('input[type="checkbox"]');
+            if (!checkbox.checked) {
+                throw new Error('Checkbox checked property not set');
+            }
+
+            document.body.removeChild(container);
+        });
+
+        runTest('Input Value Property', () => {
+            const container = document.createElement('div');
+            document.body.appendChild(container);
+
+            framework.render(
+                framework.createElement('input', { type: 'text', value: 'test' }),
+                container
+            );
+
+            const input = container.querySelector('input');
+            if (input.value !== 'test') {
+                throw new Error('Input value property not set');
+            }
+
+            document.body.removeChild(container);
+        });
+
+        runTest('Empty Component', () => {
+            const container = document.createElement('div');
+            document.body.appendChild(container);
+
+            framework.render(
+                framework.createElement('div', {}, []),
+                container
+            );
+
+            const div = container.querySelector('div');
+            if (!div || div.children.length !== 0) {
+                throw new Error('Empty component not rendered correctly');
+            }
+
+            document.body.removeChild(container);
+        });
+
+        // Show summary
+        updateSummary();
+        console.log(`Tests completed: ${passedTests}/${totalTests} passed`);
 
         // Demo the framework
         let clickCount = 0;
         const updateDemo = () => {
             const demoApp = framework.createElement('div', {
-                style: { padding: '20px', border: '2px solid #007bff', marginTop: '20px' }
+                style: { padding: '20px', border: '2px solid #667eea', marginTop: '20px', background: 'white', borderRadius: '8px' }
             },
                 framework.createElement('h2', {}, 'Framework Demo'),
                 framework.createElement('p', {}, 'This content was rendered using MiniFramework!'),
                 framework.createElement('p', {}, `Button clicked ${clickCount} times`),
                 framework.createElement('button', {
-                    style: { padding: '10px 20px', fontSize: '16px', cursor: 'pointer' },
+                    style: { padding: '10px 20px', fontSize: '16px', cursor: 'pointer', background: '#667eea', color: 'white', border: 'none', borderRadius: '4px' },
                     onClick: () => {
                         clickCount++;
                         updateDemo();

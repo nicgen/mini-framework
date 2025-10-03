@@ -19,12 +19,12 @@ export class EventSystem {
     }
 
     setupGlobalDelegation() {
-        const eventTypes = ['click', 'dblclick', 'change', 'input', 'keydown', 'keyup', 'submit', 'focus', 'blur', 'mousedown', 'mouseup', 'mouseover', 'mouseout'];
+        const eventTypes = ['click', 'dblclick', 'change', 'input', 'keydown', 'keyup', 'submit', 'focus', 'blur', 'mousedown', 'mouseup', 'mouseover', 'mouseout', 'mouseenter', 'mouseleave'];
 
         eventTypes.forEach(eventType => {
             document.addEventListener(eventType, (e) => {
                 this.handleGlobalEvent(e, eventType);
-            });
+            }, eventType === 'mouseenter' || eventType === 'mouseleave' ? true : false);
         });
     }
 
