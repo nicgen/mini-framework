@@ -51,9 +51,28 @@ class MiniFramework {
     }
 
     // App initialization
+    // mount(app, container = this.rootElement) {
+    //     this.currentApp = app;
+    //     this.router.init();
+    //     return this.render(app, container);
+    // }
+
+    // App initialization
     mount(app, container = this.rootElement) {
         this.currentApp = app;
-        this.router.init();
+
+        // CRITICAL FIX: Clear old virtual DOM tree to prevent cross-screen contamination
+        this.vdom.containerTrees.delete(container);
+
+        // Cleanup old DOM elements (event listeners, lifecycle hooks)
+        if (container.firstChild) {
+            this.vdom.cleanupElement(container.firstChild);
+        }
+
+        // Only initialize router if routes are defined
+        if (this.router.routes.size > 0) {
+            this.router.init();
+        }
         return this.render(app, container);
     }
 
